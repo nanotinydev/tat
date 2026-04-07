@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220" width="360" height="220" role="img" aria-labelledby="title desc">
+  <title id="title">tat wordmark</title>
+  <desc id="desc">Joined tat wordmark with cleaner horizontal rhythm and a cobalt dot accent.</desc>
+  <g fill="none" stroke="#0f172a" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 78H110"/>
+    <path d="M74 78V162"/>
+    <path d="M122 146C122 114 143 94 171 94C197 94 218 114 218 146"/>
+    <path d="M218 106V162"/>
+    <path d="M236 78H310"/>
+    <path d="M274 78V162"/>
+  </g>
+  <circle cx="332" cy="162" r="10" fill="#2563eb"/>
+</svg>

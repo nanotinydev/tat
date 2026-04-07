@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tat — Tiny API Test</title>
+  <meta name="description" content="File-based API tests in JSON/YAML for smoke checks, workflows, and CI.">
+  <meta name="keywords" content="api testing, cli, json, yaml, http, integration test, smoke test, junit">
+  <meta property="og:title" content="tat — Tiny API Test">
+  <meta property="og:description" content="File-based API testing in JSON/YAML with chaining and CI-friendly output.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/tat-logo-mark.svg">
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #334155;
+      line-height: 1.6;
+      background: #ffffff;
+    }
+
+    /* ===== CSS Variables ===== */
+    :root {
+      --primary: #0369a1;
+      --primary-light: #0ea5e9;
+      --primary-bg: #f0f9ff;
+      --bg: #ffffff;
+      --bg-alt: #f8fafc;
+      --text: #334155;
+      --text-heading: #0f172a;
+      --text-muted: #94a3b8;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+      --green: #22c55e;
+      --red: #ef4444;
+      --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+      --max-width: 1100px;
+    }
+
+    /* ===== Utility ===== */
+    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+    .section { padding: 64px 0; }
+    .section-alt { background: var(--bg-alt); }
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-heading);
+      margin-bottom: 8px;
+    }
+    .section-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+      margin-bottom: 32px;
+    }
+
+    /* ===== Nav ===== */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--text-heading);
+    }
+    .nav-logo img {
+      display: block;
+      height: 22px;
+      width: auto;
+    }
+    .nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+    .nav-links .nav-github {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .hamburger svg { width: 24px; height: 24px; color: var(--text-heading); }
+
+    /* ===== Hero ===== */
+    .hero {
+      text-align: center;
+      padding: 80px 24px 64px;
+      background: linear-gradient(180deg, var(--primary-bg) 0%, var(--bg) 100%);
+    }
+    .hero-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 2.75rem;
+      font-weight: 800;
+      color: var(--text-heading);
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .hero-logo {
+      width: min(220px, 58vw);
+      height: auto;
+      margin: 0 auto 20px;
+      display: block;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      max-width: 520px;
+      margin: 0 auto 32px;
+    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: #025e8f; }
+    .btn-install {
+      background: var(--bg-alt);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .btn-install:hover { background: #f1f5f9; }
+    .btn-install .copy-icon {
+      width: 16px; height: 16px;
+      color: var(--text-muted);
+      transition: color 0.15s;
+    }
+    .btn-install:hover .copy-icon { color: var(--primary); }
+    .hero-version {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* ===== Feature Cards ===== */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .feature-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .feature-icon { font-size: 1.5rem; margin-bottom: 12px; }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; color: var(--text-heading); margin-bottom: 6px; }
+    .feature-card p { font-size: 0.875rem; color: var(--text-secondary); }
+
+    /* ===== Code Example ===== */
+    .code-example { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .code-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .code-block {
+      background: var(--code-bg);
+      border-radius: 10px;
+      padding: 20px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--code-text);
+      white-space: pre;
+      position: relative;
+    }
+    .code-block .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      transition: all 0.15s;
+    }
+    .code-block .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .terminal-block {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 20px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--code-text);
+      white-space: pre;
+    }
+    .terminal-block .prompt { color: var(--text-muted); }
+    .terminal-block .pass { color: var(--green); }
+    .terminal-block .fail { color: var(--red); }
+    .terminal-block .dim { color: var(--text-secondary); }
+    .terminal-block .suite { color: #fff; font-weight: 600; }
+    .terminal-block .tag { color: var(--text-muted); }
+
+    /* Syntax highlighting */
+    .syn-key { color: #fbbf24; }
+    .syn-str { color: #86efac; }
+    .syn-num { color: #67e8f9; }
+    .syn-brace { color: #7dd3fc; }
+    .syn-bracket { color: #7dd3fc; }
+    .syn-comment { color: #64748b; }
+
+    /* ===== Quick Start ===== */
+    .steps { display: flex; gap: 32px; }
+    .step {
+      flex: 1;
+      text-align: center;
+    }
+    .step-number {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .step h3 { font-size: 1rem; font-weight: 700; color: var(--text-heading); margin-bottom: 8px; }
+    .step-code {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text);
+      word-break: break-all;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .step-code:hover { border-color: var(--primary); }
+
+    /* ===== Doc Sections ===== */
+    .doc-section { margin-bottom: 48px; }
+    .doc-section:last-child { margin-bottom: 0; }
+    .doc-section h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-heading);
+      margin-bottom: 12px;
+      padding-top: 8px;
+    }
+    .doc-section h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin: 24px 0 8px;
+    }
+    .doc-section p {
+      margin-bottom: 12px;
+      font-size: 0.925rem;
+    }
+    .doc-section ul { padding-left: 20px; margin-bottom: 12px; }
+    .doc-section li { font-size: 0.925rem; margin-bottom: 4px; }
+    .doc-section code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: #0f172a;
+    }
+    .doc-section pre {
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .doc-section pre code {
+      background: none;
+      padding: 0;
+      color: var(--code-text);
+      font-size: 0.82rem;
+      line-height: 1.65;
+    }
+    .doc-section pre .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      transition: all 0.15s;
+    }
+    .doc-section pre .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* Tables */
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 0.875rem;
+    }
+    .doc-table th {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-heading);
+      padding: 10px 14px;
+      background: var(--bg-alt);
+      border-bottom: 2px solid var(--border);
+    }
+    .doc-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .doc-table td code {
+      font-size: 0.8rem;
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+      background: var(--bg-alt);
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 12px; }
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--primary); }
+
+    /* ===== Format Toggle ===== */
+    .format-toggle {
+      display: inline-flex;
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+      font-size: 0.75rem;
+      font-family: var(--mono);
+    }
+    .format-toggle button {
+      padding: 3px 10px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .format-toggle button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .format-toggle button:hover:not(.active) {
+      color: var(--text);
+    }
+    .toggleable [data-format] { display: none; }
+    .toggleable [data-format].active { display: block; }
+    .doc-section .format-toggle {
+      background: #e2e8f0;
+      margin-bottom: 8px;
+    }
+    .doc-section .format-toggle button {
+      color: var(--text-muted);
+    }
+    .doc-section .format-toggle button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* ===== Tooltip ===== */
+    .tooltip {
+      position: fixed;
+      background: var(--code-bg);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 200;
+    }
+    .tooltip.show { opacity: 1; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero h1 { font-size: 2.25rem; }
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 24px;
+        gap: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      }
+      .hamburger { display: block; }
+      .features-grid { grid-template-columns: 1fr; }
+      .code-example { grid-template-columns: 1fr; }
+      .steps { flex-direction: column; gap: 24px; }
+      .hero { padding: 48px 24px 40px; }
+      .hero h1 { font-size: 1.75rem; }
+      .hero p { font-size: 1rem; }
+      .section { padding: 40px 0; }
+      .section-title { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== Navigation ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo" aria-label="tat home"><img src="assets/tat-logo-wordmark.svg" alt="tat"></a>
+    <button class="hamburger" aria-label="Toggle navigation" onclick="toggleNav()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#quick-start">Quick Start</a></li>
+      <li><a href="#examples">Examples</a></li>
+      <li><a href="#assertions">Assertions</a></li>
+      <li><a href="#cli">CLI</a></li>
+      <li><a href="#auth">Auth</a></li>
+      <li><a href="https://github.com/nanotinydev/tat" target="_blank" rel="noopener" class="nav-github">GitHub &nearr;</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div class="hero-badge">TINY API TEST</div>
+  <img class="hero-logo" src="assets/tat-logo-wordmark.svg" alt="tat logo">
+   <h1>API testing in JSON/YAML.<br>Run in one command.</h1>
+  <p>Fast, file-based API tests for smoke checks, simple workflows, and CI. Write them in JSON or YAML and run them with one command.</p>
+  <div class="hero-actions">
+    <a href="#quick-start" class="btn btn-primary">Get Started</a>
+    <button class="btn btn-install" onclick="copyText('npm i -g @nanotiny/tiny-api-test@latest', this)">
+      npm i -g @nanotiny/tiny-api-test@latest
+      <svg class="copy-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    </button>
+  </div>
+  <div class="hero-version">@latest &middot; MIT License &middot; Node &ge; 18</div>
+</section>
+
+<!-- ===== Features ===== -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-title">Why tat?</div>
+    <div class="section-subtitle">Everything you need to test your APIs, nothing you don't.</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3>JSON or YAML</h3>
+        <p>Write tests in <code>.tat.json</code> or <code>.tat.yml</code> files. Human-readable, version-controllable, no code required.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Powerful Assertions</h3>
+        <p>Assert status codes, fields, strings, ranges, null checks, and response times with expressive operators.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>Capture &amp; Chain</h3>
+        <p>Extract values from responses and use them in subsequent requests. Build full API flows with ease.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏷️</div>
+        <h3>Tags &amp; Filtering</h3>
+        <p>Tag suites, filter by tag, or run specific suites and individual tests. Run only what matters.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>Auth &amp; Setup Hooks</h3>
+        <p>Static tokens, OAuth via setup scripts, or <code>--env-cmd</code> for CI. Interactive 2FA prompts supported.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Multiple Outputs</h3>
+        <p>Console, JSON, or JUnit XML. Integrate with GitHub Actions, Jenkins, and any CI system.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>Agent-Friendly</h3>
+        <p>Use the <code>tat-create</code> skill to turn API specs, OpenAPI docs, and endpoint notes into runnable <code>tat</code> files faster.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧪</div>
+        <h3>VS Code Test Runner</h3>
+        <p>Run <code>tat</code> suites from Test Explorer, use CodeLens in the editor, and keep API tests close to the files you are editing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Code Example ===== -->
+<section class="section section-alt" id="examples">
+  <div class="container">
+    <div class="section-title">See it in action</div>
+    <div class="section-subtitle">A complete test file and its output — that's all there is to it.</div>
+    <div class="code-example">
+      <div class="toggleable">
+        <div class="code-label">
+          <span class="code-label-text">tests.tat.json</span>
+          <span style="display:flex;align-items:center;gap:8px;">
+            <span class="format-toggle"><button class="active" onclick="toggleFormat(this,'json')">JSON</button><button onclick="toggleFormat(this,'yaml')">YAML</button></span>
+          </span>
+        </div>
+        <div data-format="json" class="active">
+          <div class="code-block"><button class="copy-btn" onclick="copyCodeBlock(this)">Copy</button><span class="syn-brace">{</span>
+  <span class="syn-key">"env"</span>: <span class="syn-brace">{</span> <span class="syn-key">"baseUrl"</span>: <span class="syn-str">"https://api.example.com"</span> <span class="syn-brace">}</span>,
+  <span class="syn-key">"suites"</span>: <span class="syn-bracket">[</span><span class="syn-brace">{</span>
+    <span class="syn-key">"name"</span>: <span class="syn-str">"Users"</span>,
+    <span class="syn-key">"tags"</span>: <span class="syn-bracket">[</span><span class="syn-str">"smoke"</span><span class="syn-bracket">]</span>,
+    <span class="syn-key">"tests"</span>: <span class="syn-bracket">[</span>
+      <span class="syn-brace">{</span>
+        <span class="syn-key">"name"</span>: <span class="syn-str">"Create user"</span>,
+        <span class="syn-key">"method"</span>: <span class="syn-str">"POST"</span>,
+        <span class="syn-key">"url"</span>: <span class="syn-str">"{{baseUrl}}/users"</span>,
+        <span class="syn-key">"body"</span>: <span class="syn-brace">{</span> <span class="syn-key">"name"</span>: <span class="syn-str">"Alice"</span> <span class="syn-brace">}</span>,
+        <span class="syn-key">"assert"</span>: <span class="syn-bracket">[</span><span class="syn-str">"$status == 201"</span>, <span class="syn-str">"id is not null"</span><span class="syn-bracket">]</span>,
+        <span class="syn-key">"capture"</span>: <span class="syn-brace">{</span> <span class="syn-key">"userId"</span>: <span class="syn-str">"id"</span> <span class="syn-brace">}</span>
+      <span class="syn-brace">}</span>,
+      <span class="syn-brace">{</span>
+        <span class="syn-key">"name"</span>: <span class="syn-str">"Get user"</span>,
+        <span class="syn-key">"method"</span>: <span class="syn-str">"GET"</span>,
+        <span class="syn-key">"url"</span>: <span class="syn-str">"{{baseUrl}}/users/{{userId}}"</span>,
+        <span class="syn-key">"assert"</span>: <span class="syn-bracket">[</span><span class="syn-str">"$status == 200"</span>, <span class="syn-str">"name == 'Alice'"</span><span class="syn-bracket">]</span>
+      <span class="syn-brace">}</span>,
+      <span class="syn-brace">{</span>
+        <span class="syn-key">"name"</span>: <span class="syn-str">"Delete user"</span>,
+        <span class="syn-key">"method"</span>: <span class="syn-str">"DELETE"</span>,
+        <span class="syn-key">"url"</span>: <span class="syn-str">"{{baseUrl}}/users/{{userId}}"</span>,
+        <span class="syn-key">"assert"</span>: <span class="syn-bracket">[</span><span class="syn-str">"$status == 204"</span><span class="syn-bracket">]</span>
+      <span class="syn-brace">}</span>
+    <span class="syn-bracket">]</span>
+  <span class="syn-brace">}</span><span class="syn-bracket">]</span>
+<span class="syn-brace">}</span></div>
+        </div>
+        <div data-format="yaml">
+          <div class="code-block"><button class="copy-btn" onclick="copyCodeBlock(this)">Copy</button><span class="syn-key">env</span>:
+  <span class="syn-key">baseUrl</span>: <span class="syn-str">https://api.example.com</span>
+
+<span class="syn-key">suites</span>:
+  - <span class="syn-key">name</span>: <span class="syn-str">Users</span>
+    <span class="syn-key">tags</span>: [<span class="syn-str">smoke</span>]
+    <span class="syn-key">tests</span>:
+      - <span class="syn-key">name</span>: <span class="syn-str">Create user</span>
+        <span class="syn-key">method</span>: <span class="syn-str">POST</span>
+        <span class="syn-key">url</span>: <span class="syn-str">"{{baseUrl}}/users"</span>
+        <span class="syn-key">body</span>:
+          <span class="syn-key">name</span>: <span class="syn-str">Alice</span>
+        <span class="syn-key">assert</span>:
+          - <span class="syn-str">"$status == 201"</span>
+          - <span class="syn-str">"id is not null"</span>
+        <span class="syn-key">capture</span>:
+          <span class="syn-key">userId</span>: <span class="syn-str">id</span>
+
+      - <span class="syn-key">name</span>: <span class="syn-str">Get user</span>
+        <span class="syn-key">method</span>: <span class="syn-str">GET</span>
+        <span class="syn-key">url</span>: <span class="syn-str">"{{baseUrl}}/users/{{userId}}"</span>
+        <span class="syn-key">assert</span>:
+          - <span class="syn-str">"$status == 200"</span>
+          - <span class="syn-str">"name == 'Alice'"</span>
+
+      - <span class="syn-key">name</span>: <span class="syn-str">Delete user</span>
+        <span class="syn-key">method</span>: <span class="syn-str">DELETE</span>
+        <span class="syn-key">url</span>: <span class="syn-str">"{{baseUrl}}/users/{{userId}}"</span>
+        <span class="syn-key">assert</span>:
+          - <span class="syn-str">"$status == 204"</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="code-label">Terminal output</div>
+        <div class="terminal-block">
+<span class="prompt">$</span> tat run tests.tat.json
+
+<span class="suite">Users</span> <span class="tag">[smoke]</span>
+  <span class="pass">✔</span> Create user <span class="dim">(142ms)</span>
+    <span class="dim">Captured:</span>
+      <span class="dim">userId:</span> 42
+  <span class="pass">✔</span> Get user <span class="dim">(89ms)</span>
+  <span class="pass">✔</span> Delete user <span class="dim">(67ms)</span>
+
+<span class="pass">3 passed</span> <span class="dim">· 0 failed · 298ms</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Quick Start ===== -->
+<section class="section" id="quick-start">
+  <div class="container">
+    <div class="section-title">Get started in 3 steps</div>
+    <div class="section-subtitle">From zero to running tests in under a minute.</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Install</h3>
+        <div class="step-code" onclick="copyText('npm i -g @nanotiny/tiny-api-test@latest', this)">
+          npm i -g @nanotiny/tiny-api-test@latest
+        </div>
+        <div class="step-code" onclick="copyText('npx skills add https://github.com/nanotinydev/tat-skills', this)" style="margin-top:8px;">
+          npx skills add https://github.com/nanotinydev/tat-skills
+        </div>
+        <p style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);">Install the CLI + the agent skill</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Ask your AI agent</h3>
+        <div class="step-code" onclick="copyText(agentPrompt, this)" style="text-align:left;font-size:0.72rem;white-space:pre-wrap;line-height:1.5;">Use tat-create to generate a tat test file from this API specification.
+Include login, get user profile, and create order flows.
+Use YAML format and add assertions for status codes and key response fields.
+If authentication is required, create a setup hook and reuse the token in the test requests.</div>
+        <p style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);">Works with Claude Code, Copilot CLI, Gemini CLI, and more</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Run it</h3>
+        <div class="step-code" onclick="copyText('tat run tests.tat.json', this)">
+          tat run tests.tat.json
+        </div>
+        <p style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);">That's it. Your agent writes the tests, you run them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Documentation ===== -->
+<section class="section section-alt" id="docs">
+  <div class="container">
+
+    <!-- Test File Structure -->
+    <div class="doc-section" id="test-file-structure">
+      <h2>Test File Structure</h2>
+      <p>A test file has a simple structure: environment variables, optional setup, and an array of test suites.</p>
+      <div class="toggleable">
+        <div class="format-toggle"><button class="active" onclick="toggleFormat(this,'json')">JSON</button><button onclick="toggleFormat(this,'yaml')">YAML</button></div>
+        <div data-format="json" class="active">
+          <pre><code><span class="syn-brace">{</span>
+  <span class="syn-key">"$schema"</span>: <span class="syn-str">"https://unpkg.com/@nanotiny/tiny-api-test/schema.json"</span>,
+  <span class="syn-key">"env"</span>: <span class="syn-brace">{</span> <span class="syn-key">"baseUrl"</span>: <span class="syn-str">"https://api.example.com"</span> <span class="syn-brace">}</span>,
+  <span class="syn-key">"setup"</span>: <span class="syn-str">"node scripts/get-token.js"</span>,
+  <span class="syn-key">"timeout"</span>: <span class="syn-num">5000</span>,
+  <span class="syn-key">"suites"</span>: <span class="syn-bracket">[</span> ... <span class="syn-bracket">]</span>
+<span class="syn-brace">}</span></code></pre>
+        </div>
+        <div data-format="yaml">
+          <pre><code><span class="syn-key">env</span>:
+  <span class="syn-key">baseUrl</span>: <span class="syn-str">https://api.example.com</span>
+
+<span class="syn-key">setup</span>: <span class="syn-str">node scripts/get-token.js</span>
+<span class="syn-key">timeout</span>: <span class="syn-num">5000</span>
+
+<span class="syn-key">suites</span>:
+  - ...</code></pre>
+        </div>
+      </div>
+
+      <h3>Top-Level Fields</h3>
+      <table class="doc-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>$schema</code></td><td>string</td><td>No</td><td>JSON schema URL for editor autocomplete</td></tr>
+          <tr><td><code>env</code></td><td>object | string</td><td>No</td><td>Inline env variables or path to a JSON file</td></tr>
+          <tr><td><code>setup</code></td><td>string</td><td>No</td><td>Shell command run before tests; JSON stdout merged into env</td></tr>
+          <tr><td><code>timeout</code></td><td>number</td><td>No</td><td>Default request timeout in ms for all tests</td></tr>
+          <tr><td><code>suites</code></td><td>Suite[]</td><td>Yes</td><td>List of test suites</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Suite Fields</h3>
+      <table class="doc-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>name</code></td><td>string</td><td>Yes</td><td>Suite name</td></tr>
+          <tr><td><code>tags</code></td><td>string[]</td><td>No</td><td>Tags used to filter suites via <code>--tag</code></td></tr>
+          <tr><td><code>skip</code></td><td>boolean</td><td>No</td><td>Skip all tests in this suite</td></tr>
+          <tr><td><code>tests</code></td><td>Test[]</td><td>Yes</td><td>List of tests</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Test Fields</h3>
+      <table class="doc-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>name</code></td><td>string</td><td>Yes</td><td>Test name</td></tr>
+          <tr><td><code>method</code></td><td>string</td><td>Yes</td><td>HTTP method: GET, POST, PUT, PATCH, DELETE, HEAD</td></tr>
+          <tr><td><code>url</code></td><td>string</td><td>Yes</td><td>Request URL, supports <code>{{variable}}</code> interpolation</td></tr>
+          <tr><td><code>headers</code></td><td>object</td><td>No</td><td>HTTP headers as key-value pairs</td></tr>
+          <tr><td><code>body</code></td><td>any</td><td>No</td><td>Request body, objects auto-serialized as JSON</td></tr>
+          <tr><td><code>assert</code></td><td>string[]</td><td>No</td><td>Assertion expressions evaluated against the response</td></tr>
+          <tr><td><code>capture</code></td><td>object</td><td>No</td><td>Extract response values for use in later tests</td></tr>
+          <tr><td><code>response</code></td><td>true | object</td><td>No</td><td>Include response body/headers in output</td></tr>
+          <tr><td><code>skip</code></td><td>boolean</td><td>No</td><td>Skip this test without failing</td></tr>
+          <tr><td><code>timeout</code></td><td>number</td><td>No</td><td>Per-test timeout in ms (highest priority)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Assertions -->
+    <div class="doc-section" id="assertions">
+      <h2>Assertions</h2>
+      <p>Each assertion is evaluated against the response context. Body fields from object responses are spread at the root for easy access.</p>
+
+      <h3>Response Context</h3>
+      <pre><code><span class="syn-comment">// Response: { status: 200, body: { id: 1, name: "Alice" } }</span>
+<span class="syn-comment">// Available in assertions:</span>
+<span class="syn-key">$status</span>   = <span class="syn-num">200</span>            <span class="syn-comment">// HTTP status code</span>
+<span class="syn-key">$headers</span>  = { ... }         <span class="syn-comment">// Response headers</span>
+<span class="syn-key">$body</span>     = { id: 1, ... }  <span class="syn-comment">// Full response body</span>
+<span class="syn-key">$duration</span> = <span class="syn-num">142</span>            <span class="syn-comment">// Request time in ms</span>
+<span class="syn-key">id</span>        = <span class="syn-num">1</span>              <span class="syn-comment">// Body fields spread at root</span>
+<span class="syn-key">name</span>      = <span class="syn-str">"Alice"</span>        <span class="syn-comment">// Body fields spread at root</span></code></pre>
+
+      <h3>Operators</h3>
+      <table class="doc-table">
+        <thead><tr><th>Operator</th><th>Example</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>==</code> <code>!=</code></td><td><code>name == 'Alice'</code></td><td>Equals / not equals</td></tr>
+          <tr><td><code>&gt;</code> <code>&lt;</code> <code>&gt;=</code> <code>&lt;=</code></td><td><code>age &gt;= 18</code></td><td>Numeric comparison</td></tr>
+          <tr><td><code>is null</code></td><td><code>deletedAt is null</code></td><td>Value is null or missing</td></tr>
+          <tr><td><code>is not null</code></td><td><code>id is not null</code></td><td>Value exists</td></tr>
+          <tr><td><code>contains</code></td><td><code>bio contains 'engineer'</code></td><td>String contains substring</td></tr>
+          <tr><td><code>startswith</code></td><td><code>name startswith 'Ali'</code></td><td>String starts with</td></tr>
+          <tr><td><code>endswith</code></td><td><code>email endswith '.com'</code></td><td>String ends with</td></tr>
+          <tr><td><code>like</code></td><td><code>name like 'Ali*'</code></td><td>Wildcard match (* = any)</td></tr>
+          <tr><td><code>in</code> / <code>not in</code></td><td><code>role in 'admin,user'</code></td><td>Value in comma-separated list</td></tr>
+          <tr><td><code>between</code></td><td><code>age between 18 and 65</code></td><td>Value in range (inclusive)</td></tr>
+          <tr><td><code>&amp;&amp;</code> / <code>||</code></td><td><code>status == 'ok' &amp;&amp; code == 0</code></td><td>Logical AND / OR</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Duration Assertions</h3>
+      <p>Use <code>$duration</code> to assert response time:</p>
+      <div class="toggleable">
+        <div class="format-toggle"><button class="active" onclick="toggleFormat(this,'json')">JSON</button><button onclick="toggleFormat(this,'yaml')">YAML</button></div>
+        <div data-format="json" class="active">
+          <pre><code><span class="syn-key">"assert"</span>: [<span class="syn-str">"$status == 200"</span>, <span class="syn-str">"$duration &lt; 500"</span>]</code></pre>
+        </div>
+        <div data-format="yaml">
+          <pre><code><span class="syn-key">assert</span>:
+  - <span class="syn-str">"$status == 200"</span>
+  - <span class="syn-str">"$duration &lt; 500"</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Capture & Variables -->
+    <div class="doc-section" id="capture">
+      <h2>Capture &amp; Variables</h2>
+      <p>Use <code>capture</code> to extract values from a response and reuse them in later tests with <code>{{variable}}</code> interpolation.</p>
+
+      <h3>Basic Capture</h3>
+      <div class="toggleable">
+        <div class="format-toggle"><button class="active" onclick="toggleFormat(this,'json')">JSON</button><button onclick="toggleFormat(this,'yaml')">YAML</button></div>
+        <div data-format="json" class="active">
+          <pre><code><span class="syn-comment">// Create a user and capture the ID</span>
+<span class="syn-brace">{</span>
+  <span class="syn-key">"name"</span>: <span class="syn-str">"Create user"</span>,
+  <span class="syn-key">"method"</span>: <span class="syn-str">"POST"</span>,
+  <span class="syn-key">"url"</span>: <span class="syn-str">"{{baseUrl}}/users"</span>,
+  <span class="syn-key">"body"</span>: <span class="syn-brace">{</span> <span class="syn-key">"name"</span>: <span class="syn-str">"Alice"</span> <span class="syn-brace">}</span>,
+  <span class="syn-key">"assert"</span>: [<span class="syn-str">"$status == 201"</span>],
+  <span class="syn-key">"capture"</span>: <span class="syn-brace">{</span> <span class="syn-key">"userId"</span>: <span class="syn-str">"id"</span> <span class="syn-brace">}</span>
+<span class="syn-brace">}</span>
+
+<span class="syn-comment">// Use the captured ID in a later test</span>
+<span class="syn-brace">{</span>
+  <span class="syn-key">"name"</span>: <span class="syn-str">"Get user"</span>,
+  <span class="syn-key">"method"</span>: <span class="syn-str">"GET"</span>,
+  <span class="syn-key">"url"</span>: <span class="syn-str">"{{baseUrl}}/users/{{userId}}"</span>,
+  <span class="syn-key">"assert"</span>: [<span class="syn-str">"$status == 200"</span>, <span class="syn-str">"name == 'Alice'"</span>]
+<span class="syn-brace">}</span></code></pre>
+        </div>
+        <div data-format="yaml">
+          <pre><code><span class="syn-comment"># Create a user and capture the ID</span>
+- <span class="syn-key">name</span>: <span class="syn-str">Create user</span>
+  <span class="syn-key">method</span>: <span class="syn-str">POST</span>
+  <span class="syn-key">url</span>: <span class="syn-str">"{{baseUrl}}/users"</span>
+  <span class="syn-key">body</span>:
+    <span class="syn-key">name</span>: <span class="syn-str">Alice</span>
+  <span class="syn-key">assert</span>:
+    - <span class="syn-str">"$status == 201"</span>
+  <span class="syn-key">capture</span>:
+    <span class="syn-key">userId</span>: <span class="syn-str">id</span>
+
+<span class="syn-comment"># Use the captured ID in a later test</span>
+- <span class="syn-key">name</span>: <span class="syn-str">Get user</span>
+  <span class="syn-key">method</span>: <span class="syn-str">GET</span>
+  <span class="syn-key">url</span>: <span class="syn-str">"{{baseUrl}}/users/{{userId}}"</span>
+  <span class="syn-key">assert</span>:
+    - <span class="syn-str">"$status == 200"</span>
+    - <span class="syn-str">"name == 'Alice'"</span></code></pre>
+        </div>
+      </div>
+
+      <h3>Advanced Capture Expressions</h3>
+      <p>Capture uses <code>@nanotiny/json-expression</code> query syntax — filter arrays, use indexes, traverse nested paths:</p>
+      <div class="toggleable">
+        <div class="format-toggle"><button class="active" onclick="toggleFormat(this,'json')">JSON</button><button onclick="toggleFormat(this,'yaml')">YAML</button></div>
+        <div data-format="json" class="active">
+          <pre><code><span class="syn-key">"capture"</span>: <span class="syn-brace">{</span>
+  <span class="syn-key">"companyName"</span>: <span class="syn-str">"companies.name | id == 'c2'"</span>,       <span class="syn-comment">// filter by field</span>
+  <span class="syn-key">"thirdId"</span>:     <span class="syn-str">"companies.id | $index == 2"</span>,         <span class="syn-comment">// by array index</span>
+  <span class="syn-key">"firstType"</span>:   <span class="syn-str">"types.type.name"</span>,                    <span class="syn-comment">// nested path</span>
+  <span class="syn-key">"hpStat"</span>:      <span class="syn-str">"stats.base_stat | $index == 0"</span>       <span class="syn-comment">// indexed nested</span>
+<span class="syn-brace">}</span></code></pre>
+        </div>
+        <div data-format="yaml">
+          <pre><code><span class="syn-key">capture</span>:
+  <span class="syn-key">companyName</span>: <span class="syn-str">"companies.name | id == 'c2'"</span>       <span class="syn-comment"># filter by field</span>
+  <span class="syn-key">thirdId</span>:     <span class="syn-str">"companies.id | $index == 2"</span>         <span class="syn-comment"># by array index</span>
+  <span class="syn-key">firstType</span>:   <span class="syn-str">types.type.name</span>                    <span class="syn-comment"># nested path</span>
+  <span class="syn-key">hpStat</span>:      <span class="syn-str">"stats.base_stat | $index == 0"</span>       <span class="syn-comment"># indexed nested</span></code></pre>
+        </div>
+      </div>
+
+      <h3>Environment Variables</h3>
+      <p>Define variables in the <code>env</code> field (inline or external file). Variables are interpolated in <code>url</code>, <code>headers</code>, and <code>body</code>:</p>
+      <div class="toggleable">
+        <div class="format-toggle"><button class="active" onclick="toggleFormat(this,'json')">JSON</button><button onclick="toggleFormat(this,'yaml')">YAML</button></div>
+        <div data-format="json" class="active">
+          <pre><code><span class="syn-brace">{</span>
+  <span class="syn-key">"env"</span>: <span class="syn-brace">{</span> <span class="syn-key">"baseUrl"</span>: <span class="syn-str">"https://api.example.com"</span>, <span class="syn-key">"token"</span>: <span class="syn-str">"abc123"</span> <span class="syn-brace">}</span>,
+  <span class="syn-comment">// or load from file:</span>
+  <span class="syn-key">"env"</span>: <span class="syn-str">"./env.local.json"</span>
+<span class="syn-brace">}</span></code></pre>
+        </div>
+        <div data-format="yaml">
+          <pre><code><span class="syn-key">env</span>:
+  <span class="syn-key">baseUrl</span>: <span class="syn-str">https://api.example.com</span>
+  <span class="syn-key">token</span>: <span class="syn-str">abc123</span>
+
+<span class="syn-comment"># or load from file:</span>
+<span class="syn-key">env</span>: <span class="syn-str">./env.local.json</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLI Reference -->
+    <div class="doc-section" id="cli">
+      <h2>CLI Reference</h2>
+
+      <h3>tat run &lt;file&gt;</h3>
+      <p>Run tests from a JSON/YAML file, or from a directory (discovers all <code>.tat.json</code>, <code>.tat.yml</code>, <code>.tat.yaml</code> files recursively).</p>
+
+      <table class="doc-table">
+        <thead><tr><th>Option</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>--tag &lt;tags&gt;</code></td><td>Filter suites by tag (comma-separated, OR logic)</td></tr>
+          <tr><td><code>--suite &lt;name&gt;</code></td><td>Run a single suite by name</td></tr>
+          <tr><td><code>--test &lt;name&gt;</code></td><td>Run a single test by name (requires <code>--suite</code>)</td></tr>
+          <tr><td><code>--output &lt;format&gt;</code></td><td><code>console</code> (default), <code>json</code>, or <code>junit</code></td></tr>
+          <tr><td><code>--out &lt;file&gt;</code></td><td>Write output to a file</td></tr>
+          <tr><td><code>--bail</code></td><td>Stop on first failure</td></tr>
+          <tr><td><code>--env-cmd &lt;cmd&gt;</code></td><td>Run command; JSON stdout merged into env</td></tr>
+          <tr><td><code>--timeout &lt;ms&gt;</code></td><td>Global request timeout in ms</td></tr>
+        </tbody>
+      </table>
+
+      <h3>tat validate &lt;file&gt;</h3>
+      <p>Check syntax, schema validity, and warn about undefined <code>{{variables}}</code> without running tests.</p>
+      <pre><code><span class="prompt">$</span> tat validate tests.tat.json
+tests.tat.json: valid
+
+<span class="prompt">$</span> tat validate tests.tat.json
+tests.tat.json: valid (1 warning)
+  [warn] test "Get user": variable "{{token}}" is not defined</code></pre>
+
+      <h3>Exit Codes</h3>
+      <table class="doc-table">
+        <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>0</code></td><td>All tests passed</td></tr>
+          <tr><td><code>1</code></td><td>One or more tests failed</td></tr>
+          <tr><td><code>2</code></td><td>Configuration error (bad JSON/YAML, schema error, missing file)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Timeout Priority</h3>
+      <p>Highest to lowest: per-test <code>timeout</code> field &rarr; <code>--timeout</code> CLI flag &rarr; file-level <code>timeout</code> &rarr; no timeout.</p>
+    </div>
+
+    <!-- Authentication -->
+    <div class="doc-section" id="auth">
+      <h2>Authentication</h2>
+
+      <h3>Static Token</h3>
+      <p>For APIs where you already have a token — put it in your env:</p>
+      <div class="toggleable">
+        <div class="format-toggle"><button class="active" onclick="toggleFormat(this,'json')">JSON</button><button onclick="toggleFormat(this,'yaml')">YAML</button></div>
+        <div data-format="json" class="active">
+          <pre><code><span class="syn-brace">{</span>
+  <span class="syn-key">"env"</span>: <span class="syn-brace">{</span> <span class="syn-key">"token"</span>: <span class="syn-str">"eyJhbG..."</span> <span class="syn-brace">}</span>
+<span class="syn-brace">}</span></code></pre>
+        </div>
+        <div data-format="yaml">
+          <pre><code><span class="syn-key">env</span>:
+  <span class="syn-key">token</span>: <span class="syn-str">eyJhbG...</span></code></pre>
+        </div>
+      </div>
+
+      <h3>Setup Hook (OAuth / 2FA)</h3>
+      <p>The <code>setup</code> command runs before tests. Its JSON stdout merges into env. Interactive prompts work because stdin/stderr are inherited:</p>
+      <div class="toggleable">
+        <div class="format-toggle"><button class="active" onclick="toggleFormat(this,'json')">JSON</button><button onclick="toggleFormat(this,'yaml')">YAML</button></div>
+        <div data-format="json" class="active">
+          <pre><code><span class="syn-brace">{</span>
+  <span class="syn-key">"setup"</span>: <span class="syn-str">"node scripts/get-token.js"</span>,
+  <span class="syn-key">"suites"</span>: <span class="syn-bracket">[</span>...<span class="syn-bracket">]</span>
+<span class="syn-brace">}</span></code></pre>
+        </div>
+        <div data-format="yaml">
+          <pre><code><span class="syn-key">setup</span>: <span class="syn-str">node scripts/get-token.js</span>
+
+<span class="syn-key">suites</span>:
+  - ...</code></pre>
+        </div>
+      </div>
+      <pre><code><span class="syn-comment">// scripts/get-token.js — print JSON to stdout</span>
+<span class="syn-comment">// ... do OAuth flow, prompt for 2FA ...</span>
+console.log(JSON.stringify(<span class="syn-brace">{</span> <span class="syn-key">token</span>: access_token <span class="syn-brace">}</span>));</code></pre>
+
+      <h3>CI / --env-cmd</h3>
+      <p>Same as setup but from the command line — useful when auth differs per environment:</p>
+      <pre><code><span class="prompt">$</span> tat run tests.json --env-cmd "node scripts/ci-token.js"
+
+<span class="syn-comment"># Or inline for simple cases:</span>
+<span class="prompt">$</span> tat run tests.json --env-cmd \
+    "node -e \"console.log(JSON.stringify({token:process.env.API_TOKEN}))\""</code></pre>
+
+      <h3>Strategy by Scenario</h3>
+      <table class="doc-table">
+        <thead><tr><th>Scenario</th><th>Approach</th></tr></thead>
+        <tbody>
+          <tr><td>Local dev, token known</td><td>Paste into <code>env.local.json</code> (gitignored)</td></tr>
+          <tr><td>Local dev, OAuth + 2FA</td><td><code>setup</code> script with interactive prompt</td></tr>
+          <tr><td>CI, OAuth client credentials</td><td><code>--env-cmd</code> with non-interactive script</td></tr>
+          <tr><td>CI, long-lived API key</td><td>Inject via environment variable or <code>--env-cmd</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CI Integration -->
+    <div class="doc-section" id="ci">
+      <h2>CI Integration</h2>
+      <p>Use JUnit output for CI systems. Here's a GitHub Actions example:</p>
+      <pre><code><span class="syn-key">name</span>: API Tests
+<span class="syn-key">on</span>: [push, pull_request]
+<span class="syn-key">jobs</span>:
+  <span class="syn-key">test</span>:
+    <span class="syn-key">runs-on</span>: ubuntu-latest
+    <span class="syn-key">steps</span>:
+      - <span class="syn-key">uses</span>: actions/checkout@v4
+      - <span class="syn-key">uses</span>: actions/setup-node@v4
+        <span class="syn-key">with</span>:
+          <span class="syn-key">node-version</span>: <span class="syn-num">18</span>
+      - <span class="syn-key">run</span>: npm i -g @nanotiny/tiny-api-test@latest
+      - <span class="syn-key">run</span>: tat run tests.tat.json --output junit --out results.xml
+      - <span class="syn-key">uses</span>: actions/upload-artifact@v4
+        <span class="syn-key">with</span>:
+          <span class="syn-key">name</span>: test-results
+          <span class="syn-key">path</span>: results.xml</code></pre>
+
+      <h3>VS Code Extension</h3>
+      <p>Get Test Explorer integration, CodeLens, and editor support:</p>
+      <pre><code><span class="prompt">$</span> code --install-extension nanotiny.tat-test-runner</code></pre>
+
+      <h3>Agent Skill (tat-create)</h3>
+      <p><code>tat</code> is agent-friendly. Install the <code>tat-create</code> skill to let AI coding assistants like Claude Code, Copilot CLI, or Gemini CLI generate <code>.tat.json</code> and <code>.tat.yml</code> files from your API specs, OpenAPI/Swagger docs, endpoint descriptions, or request/response examples:</p>
+      <pre><code><span class="prompt">$</span> npx skills add https://github.com/nanotinydev/tat-skills</code></pre>
+      <p>Once installed, prompt your assistant with something like:</p>
+      <pre><code><span class="syn-comment"># Example prompt for your AI assistant:</span>
+Use tat-create to generate a tat test file from this API specification.
+Include login, get user profile, and create order flows.
+Use YAML format and add assertions for status codes and key response fields.
+If authentication is required, create a setup hook and reuse the token.</code></pre>
+      <p>The skill handles suites, requests, assertions, captures, and authentication flows — turning your API spec into runnable tests in seconds.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="footer-links">
+    <a href="https://github.com/nanotinydev/tat" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@nanotiny/tiny-api-test" target="_blank" rel="noopener">npm</a>
+    <a href="https://marketplace.visualstudio.com/items?itemName=nanotiny.tat-test-runner" target="_blank" rel="noopener">VS Code Extension</a>
+  </div>
+  <div>MIT License &middot; &copy; 2026 NanoTiny</div>
+</footer>
+
+<!-- ===== Tooltip ===== -->
+<div class="tooltip" id="tooltip">Copied!</div>
+
+<script>
+  // Format toggle
+  function toggleFormat(btn, format) {
+    const container = btn.closest('.toggleable');
+    if (!container) return;
+    // Update buttons
+    container.querySelectorAll('.format-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // Update content
+    container.querySelectorAll('[data-format]').forEach(el => el.classList.remove('active'));
+    container.querySelectorAll('[data-format="' + format + '"]').forEach(el => el.classList.add('active'));
+    // Update label if present
+    const label = container.querySelector('.code-label-text');
+    if (label) label.textContent = format === 'json' ? 'tests.tat.json' : 'tests.tat.yml';
+  }
+
+  // Agent prompt for copy
+  const agentPrompt = `Use tat-create to generate a tat test file from this API specification.
+Include login, get user profile, and create order flows.
+Use YAML format and add assertions for status codes and key response fields.
+If authentication is required, create a setup hook and reuse the token in the test requests.`;
+
+  // Nav toggle
+  function toggleNav() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+
+  // Close nav on link click (mobile)
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+
+  // Copy to clipboard
+  function copyText(text, el) {
+    navigator.clipboard.writeText(text).then(() => showTooltip(el));
+  }
+
+  function copyCodeBlock(btn) {
+    const block = btn.closest('.code-block') || btn.closest('pre');
+    if (!block) return;
+    const code = block.querySelector('code') || block;
+    const text = code.textContent.replace(/^Copy\n?/, '').trim();
+    navigator.clipboard.writeText(text).then(() => showTooltip(btn));
+  }
+
+  function showTooltip(el) {
+    const tooltip = document.getElementById('tooltip');
+    const rect = el.getBoundingClientRect();
+    tooltip.style.left = rect.left + rect.width / 2 - 30 + 'px';
+    tooltip.style.top = rect.top - 32 + 'px';
+    tooltip.classList.add('show');
+    setTimeout(() => tooltip.classList.remove('show'), 1200);
+  }
+
+  // Active nav link on scroll
+  const sections = document.querySelectorAll('section[id], .doc-section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+
+  function updateActiveLink() {
+    let current = '';
+    sections.forEach(section => {
+      const top = section.offsetTop - 80;
+      if (window.scrollY >= top) {
+        current = section.getAttribute('id');
+      }
+    });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveLink, { passive: true });
+  updateActiveLink();
+</script>
+
+</body>
+</html>

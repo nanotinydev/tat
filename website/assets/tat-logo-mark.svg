@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title desc">
+  <title id="title">tat icon</title>
+  <desc id="desc">Compact tat product icon with black mark on white background.</desc>
+  <rect x="4" y="4" width="120" height="120" rx="26" ry="26" fill="#ffffff"/>
+  <g fill="none" stroke="#111111" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 42H46"/>
+    <path d="M31 42V84"/>
+    <path d="M53 76C53 60 61 50 73 50C85 50 94 60 94 76"/>
+    <path d="M94 56V84"/>
+    <path d="M97 42H121"/>
+    <path d="M109 42V84"/>
+  </g>
+  <circle cx="115" cy="88" r="4.5" fill="#111111"/>
+</svg>
