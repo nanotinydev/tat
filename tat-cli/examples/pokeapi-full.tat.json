@@ -1,0 +1,1229 @@
+{
+  "$schema": "https://unpkg.com/tiny-api-test/schema.json",
+  "env": {
+    "baseUrl": "https://pokeapi.co/api/v2"
+  },
+  "suites": [
+    {
+      "name": "Pokemon",
+      "tags": ["smoke", "pokemon"],
+      "tests": [
+        {
+          "name": "GET /pokemon list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon?limit=10",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /pokemon/pikachu returns Pikachu by name",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon/pikachu",
+          "assert": [
+            "$status == 200",
+            "id == 25",
+            "name == 'pikachu'",
+            "base_experience is not null",
+            "height is not null",
+            "weight is not null",
+            "abilities is not null",
+            "moves is not null",
+            "types is not null",
+            "stats is not null",
+            "sprites is not null"
+          ],
+          "capture": {
+            "pikachuId": "id",
+            "pikachuType": "types.type.name",
+            "hpStat": "stats.base_stat | $index == 0",
+            "speedStat": "stats.base_stat | $index == 5"
+          }
+        },
+        {
+          "name": "GET /pokemon/1 returns Bulbasaur by ID",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon/1",
+          "assert": [
+            "$status == 200",
+            "id == 1",
+            "name == 'bulbasaur'"
+          ]
+        },
+        {
+          "name": "GET /pokemon/{{pikachuId}} matches Pikachu ID from capture",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon/{{pikachuId}}",
+          "assert": ["$status == 200", "name == 'pikachu'"]
+        },
+        {
+          "name": "GET /pokemon/9999999 returns 404 for unknown pokemon",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon/9999999",
+          "assert": ["$status == 404"]
+        }
+      ]
+    },
+    {
+      "name": "Pokemon Species",
+      "tags": ["pokemon", "species"],
+      "tests": [
+        {
+          "name": "GET /pokemon-species list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-species?limit=5",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /pokemon-species/pikachu returns species data",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-species/pikachu",
+          "assert": [
+            "$status == 200",
+            "id == 25",
+            "name == 'pikachu'",
+            "is_legendary is not null",
+            "is_mythical is not null",
+            "capture_rate is not null",
+            "base_happiness is not null",
+            "growth_rate is not null",
+            "egg_groups is not null",
+            "flavor_text_entries is not null"
+          ]
+        },
+        {
+          "name": "GET /pokemon-species/mewtwo returns legendary species",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-species/mewtwo",
+          "assert": ["$status == 200", "is_legendary == true"]
+        }
+      ]
+    },
+    {
+      "name": "Pokemon Forms",
+      "tags": ["pokemon", "forms"],
+      "tests": [
+        {
+          "name": "GET /pokemon-form list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-form?limit=5",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /pokemon-form/pikachu returns form data",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-form/pikachu",
+          "assert": [
+            "$status == 200",
+            "name == 'pikachu'",
+            "is_default is not null",
+            "is_battle_only is not null",
+            "sprites is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pokemon Colors",
+      "tags": ["pokemon", "colors"],
+      "tests": [
+        {
+          "name": "GET /pokemon-color list returns all colors",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-color",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /pokemon-color/yellow returns yellow color",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-color/yellow",
+          "assert": [
+            "$status == 200",
+            "name == 'yellow'",
+            "pokemon_species is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pokemon Habitats",
+      "tags": ["pokemon", "habitats"],
+      "tests": [
+        {
+          "name": "GET /pokemon-habitat list returns all habitats",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-habitat",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /pokemon-habitat/forest returns forest habitat",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-habitat/forest",
+          "assert": [
+            "$status == 200",
+            "name == 'forest'",
+            "pokemon_species is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pokemon Shapes",
+      "tags": ["pokemon", "shapes"],
+      "tests": [
+        {
+          "name": "GET /pokemon-shape list returns all shapes",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-shape",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /pokemon-shape/ball returns ball shape",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokemon-shape/ball",
+          "assert": [
+            "$status == 200",
+            "name == 'ball'",
+            "pokemon_species is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Abilities",
+      "tags": ["pokemon", "abilities"],
+      "tests": [
+        {
+          "name": "GET /ability list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/ability?limit=10",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /ability/overgrow returns ability data",
+          "method": "GET",
+          "url": "{{baseUrl}}/ability/overgrow",
+          "assert": [
+            "$status == 200",
+            "name == 'overgrow'",
+            "is_main_series is not null",
+            "effect_entries is not null",
+            "pokemon is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Characteristics",
+      "tags": ["pokemon", "characteristics"],
+      "tests": [
+        {
+          "name": "GET /characteristic list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/characteristic?limit=5",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /characteristic/1 returns characteristic data",
+          "method": "GET",
+          "url": "{{baseUrl}}/characteristic/1",
+          "assert": [
+            "$status == 200",
+            "id == 1",
+            "gene_modulo is not null",
+            "possible_values is not null",
+            "descriptions is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Egg Groups",
+      "tags": ["pokemon", "egg-groups"],
+      "tests": [
+        {
+          "name": "GET /egg-group list returns all egg groups",
+          "method": "GET",
+          "url": "{{baseUrl}}/egg-group",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /egg-group/monster returns monster egg group",
+          "method": "GET",
+          "url": "{{baseUrl}}/egg-group/monster",
+          "assert": [
+            "$status == 200",
+            "name == 'monster'",
+            "pokemon_species is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Genders",
+      "tags": ["pokemon", "genders"],
+      "tests": [
+        {
+          "name": "GET /gender list returns all genders",
+          "method": "GET",
+          "url": "{{baseUrl}}/gender",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /gender/female returns female gender data",
+          "method": "GET",
+          "url": "{{baseUrl}}/gender/female",
+          "assert": [
+            "$status == 200",
+            "name == 'female'",
+            "pokemon_species_details is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Growth Rates",
+      "tags": ["pokemon", "growth-rates"],
+      "tests": [
+        {
+          "name": "GET /growth-rate list returns all growth rates",
+          "method": "GET",
+          "url": "{{baseUrl}}/growth-rate",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /growth-rate/medium returns medium growth rate",
+          "method": "GET",
+          "url": "{{baseUrl}}/growth-rate/medium",
+          "assert": [
+            "$status == 200",
+            "name == 'medium'",
+            "formula is not null",
+            "levels is not null",
+            "pokemon_species is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Natures",
+      "tags": ["pokemon", "natures"],
+      "tests": [
+        {
+          "name": "GET /nature list returns all natures",
+          "method": "GET",
+          "url": "{{baseUrl}}/nature",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /nature/adamant returns adamant nature",
+          "method": "GET",
+          "url": "{{baseUrl}}/nature/adamant",
+          "assert": [
+            "$status == 200",
+            "name == 'adamant'",
+            "increased_stat is not null",
+            "decreased_stat is not null"
+          ]
+        },
+        {
+          "name": "GET /nature/hardy returns hardy nature (neutral)",
+          "method": "GET",
+          "url": "{{baseUrl}}/nature/hardy",
+          "assert": ["$status == 200", "name == 'hardy'"]
+        }
+      ]
+    },
+    {
+      "name": "Pokeathlon Stats",
+      "tags": ["pokemon", "pokeathlon"],
+      "tests": [
+        {
+          "name": "GET /pokeathlon-stat list returns all pokeathlon stats",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokeathlon-stat",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /pokeathlon-stat/speed returns speed stat",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokeathlon-stat/speed",
+          "assert": [
+            "$status == 200",
+            "name == 'speed'",
+            "affecting_natures is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "tags": ["pokemon", "stats"],
+      "tests": [
+        {
+          "name": "GET /stat list returns all stats",
+          "method": "GET",
+          "url": "{{baseUrl}}/stat",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /stat/speed returns speed stat",
+          "method": "GET",
+          "url": "{{baseUrl}}/stat/speed",
+          "assert": [
+            "$status == 200",
+            "name == 'speed'",
+            "is_battle_only is not null",
+            "affecting_moves is not null",
+            "affecting_natures is not null"
+          ]
+        },
+        {
+          "name": "GET /stat/hp returns hp stat",
+          "method": "GET",
+          "url": "{{baseUrl}}/stat/hp",
+          "assert": ["$status == 200", "name == 'hp'"]
+        }
+      ]
+    },
+    {
+      "name": "Types",
+      "tags": ["smoke", "pokemon", "types"],
+      "tests": [
+        {
+          "name": "GET /type list returns all types",
+          "method": "GET",
+          "url": "{{baseUrl}}/type",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /type/fire returns fire type",
+          "method": "GET",
+          "url": "{{baseUrl}}/type/fire",
+          "assert": [
+            "$status == 200",
+            "name == 'fire'",
+            "damage_relations is not null",
+            "pokemon is not null",
+            "moves is not null"
+          ]
+        },
+        {
+          "name": "GET /type/water returns water type",
+          "method": "GET",
+          "url": "{{baseUrl}}/type/water",
+          "assert": ["$status == 200", "name == 'water'", "damage_relations is not null"]
+        }
+      ]
+    },
+    {
+      "name": "Berries",
+      "tags": ["berries"],
+      "tests": [
+        {
+          "name": "GET /berry list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/berry?limit=10",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /berry/cheri returns cheri berry",
+          "method": "GET",
+          "url": "{{baseUrl}}/berry/cheri",
+          "assert": [
+            "$status == 200",
+            "name == 'cheri'",
+            "growth_time is not null",
+            "max_harvest is not null",
+            "natural_gift_power is not null",
+            "size is not null",
+            "smoothness is not null",
+            "soil_dryness is not null",
+            "firmness is not null",
+            "flavors is not null",
+            "item is not null",
+            "natural_gift_type is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Berry Firmness",
+      "tags": ["berries", "firmness"],
+      "tests": [
+        {
+          "name": "GET /berry-firmness list returns all firmness levels",
+          "method": "GET",
+          "url": "{{baseUrl}}/berry-firmness",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /berry-firmness/soft returns soft firmness",
+          "method": "GET",
+          "url": "{{baseUrl}}/berry-firmness/soft",
+          "assert": [
+            "$status == 200",
+            "name == 'soft'",
+            "berries is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Berry Flavors",
+      "tags": ["berries", "flavors"],
+      "tests": [
+        {
+          "name": "GET /berry-flavor list returns all flavors",
+          "method": "GET",
+          "url": "{{baseUrl}}/berry-flavor",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /berry-flavor/spicy returns spicy flavor",
+          "method": "GET",
+          "url": "{{baseUrl}}/berry-flavor/spicy",
+          "assert": [
+            "$status == 200",
+            "name == 'spicy'",
+            "berries is not null",
+            "contest_type is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Contest Types",
+      "tags": ["contests"],
+      "tests": [
+        {
+          "name": "GET /contest-type list returns all contest types",
+          "method": "GET",
+          "url": "{{baseUrl}}/contest-type",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /contest-type/cool returns cool contest type",
+          "method": "GET",
+          "url": "{{baseUrl}}/contest-type/cool",
+          "assert": [
+            "$status == 200",
+            "name == 'cool'",
+            "berry_flavor is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Contest Effects",
+      "tags": ["contests"],
+      "tests": [
+        {
+          "name": "GET /contest-effect list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/contest-effect?limit=5",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /contest-effect/1 returns contest effect data",
+          "method": "GET",
+          "url": "{{baseUrl}}/contest-effect/1",
+          "assert": [
+            "$status == 200",
+            "id == 1",
+            "appeal is not null",
+            "jam is not null",
+            "effect_entries is not null",
+            "flavor_text_entries is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Super Contest Effects",
+      "tags": ["contests"],
+      "tests": [
+        {
+          "name": "GET /super-contest-effect list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/super-contest-effect?limit=5",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /super-contest-effect/1 returns super contest effect data",
+          "method": "GET",
+          "url": "{{baseUrl}}/super-contest-effect/1",
+          "assert": [
+            "$status == 200",
+            "id == 1",
+            "appeal is not null",
+            "flavor_text_entries is not null",
+            "moves is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Encounter Methods",
+      "tags": ["encounters"],
+      "tests": [
+        {
+          "name": "GET /encounter-method list returns all methods",
+          "method": "GET",
+          "url": "{{baseUrl}}/encounter-method",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /encounter-method/walk returns walk method",
+          "method": "GET",
+          "url": "{{baseUrl}}/encounter-method/walk",
+          "assert": [
+            "$status == 200",
+            "name == 'walk'",
+            "order is not null",
+            "names is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Encounter Conditions",
+      "tags": ["encounters"],
+      "tests": [
+        {
+          "name": "GET /encounter-condition list returns all conditions",
+          "method": "GET",
+          "url": "{{baseUrl}}/encounter-condition",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /encounter-condition/swarm returns swarm condition",
+          "method": "GET",
+          "url": "{{baseUrl}}/encounter-condition/swarm",
+          "assert": [
+            "$status == 200",
+            "name == 'swarm'",
+            "values is not null",
+            "names is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Encounter Condition Values",
+      "tags": ["encounters"],
+      "tests": [
+        {
+          "name": "GET /encounter-condition-value list returns all values",
+          "method": "GET",
+          "url": "{{baseUrl}}/encounter-condition-value",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /encounter-condition-value/swarm-yes returns condition value",
+          "method": "GET",
+          "url": "{{baseUrl}}/encounter-condition-value/swarm-yes",
+          "response": { "body": true },
+          "assert": [
+            "$status == 200",
+            "name == 'swarm-yes'",
+            "condition is not null",
+            "names \\count() >=3"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Evolution Chains",
+      "tags": ["evolution"],
+      "tests": [
+        {
+          "name": "GET /evolution-chain list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/evolution-chain?limit=5",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /evolution-chain/1 returns bulbasaur chain",
+          "method": "GET",
+          "url": "{{baseUrl}}/evolution-chain/1",
+          "assert": [
+            "$status == 200",
+            "id == 1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Evolution Triggers",
+      "tags": ["evolution"],
+      "tests": [
+        {
+          "name": "GET /evolution-trigger list returns all triggers",
+          "method": "GET",
+          "url": "{{baseUrl}}/evolution-trigger",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /evolution-trigger/level-up returns level-up trigger",
+          "method": "GET",
+          "url": "{{baseUrl}}/evolution-trigger/level-up",
+          "assert": [
+            "$status == 200",
+            "name == 'level-up'",
+            "names is not null",
+            "pokemon_species is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Generations",
+      "tags": ["games"],
+      "tests": [
+        {
+          "name": "GET /generation list returns all generations",
+          "method": "GET",
+          "url": "{{baseUrl}}/generation",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /generation/generation-i returns Gen 1",
+          "method": "GET",
+          "url": "{{baseUrl}}/generation/generation-i",
+          "assert": [
+            "$status == 200",
+            "name == 'generation-i'",
+            "main_region is not null",
+            "pokemon_species is not null",
+            "version_groups is not null",
+            "moves is not null",
+            "types is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pokedexes",
+      "tags": ["games"],
+      "tests": [
+        {
+          "name": "GET /pokedex list returns all pokedexes",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokedex",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /pokedex/national returns national pokedex",
+          "method": "GET",
+          "url": "{{baseUrl}}/pokedex/national",
+          "assert": [
+            "$status == 200",
+            "name == 'national'",
+            "is_main_series is not null",
+            "pokemon_entries is not null",
+            "descriptions is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Versions",
+      "tags": ["games"],
+      "tests": [
+        {
+          "name": "GET /version list returns all versions",
+          "method": "GET",
+          "url": "{{baseUrl}}/version",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /version/red returns Red version",
+          "method": "GET",
+          "url": "{{baseUrl}}/version/red",
+          "assert": [
+            "$status == 200",
+            "name == 'red'",
+            "names is not null",
+            "version_group is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Version Groups",
+      "tags": ["games"],
+      "tests": [
+        {
+          "name": "GET /version-group list returns all version groups",
+          "method": "GET",
+          "url": "{{baseUrl}}/version-group",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /version-group/red-blue returns Red/Blue group",
+          "method": "GET",
+          "url": "{{baseUrl}}/version-group/red-blue",
+          "assert": [
+            "$status == 200",
+            "name == 'red-blue'",
+            "order is not null",
+            "generation is not null",
+            "versions is not null",
+            "pokedexes is not null",
+            "regions is not null",
+            "move_learn_methods is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Items",
+      "tags": ["items"],
+      "tests": [
+        {
+          "name": "GET /item list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/item?limit=10",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /item/master-ball returns Master Ball",
+          "method": "GET",
+          "url": "{{baseUrl}}/item/master-ball",
+          "assert": [
+            "$status == 200",
+            "name == 'master-ball'",
+            "cost is not null",
+            "category is not null",
+            "effect_entries is not null",
+            "sprites is not null"
+          ]
+        },
+        {
+          "name": "GET /item/potion returns Potion",
+          "method": "GET",
+          "url": "{{baseUrl}}/item/potion",
+          "assert": ["$status == 200", "name == 'potion'", "cost is not null"]
+        }
+      ]
+    },
+    {
+      "name": "Item Attributes",
+      "tags": ["items"],
+      "tests": [
+        {
+          "name": "GET /item-attribute list returns all attributes",
+          "method": "GET",
+          "url": "{{baseUrl}}/item-attribute",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /item-attribute/holdable returns holdable attribute",
+          "method": "GET",
+          "url": "{{baseUrl}}/item-attribute/holdable",
+          "assert": [
+            "$status == 200",
+            "name == 'holdable'",
+            "items is not null",
+            "descriptions is not null",
+            "names is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Item Categories",
+      "tags": ["items"],
+      "tests": [
+        {
+          "name": "GET /item-category list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/item-category",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /item-category/standard-balls returns standard balls category",
+          "method": "GET",
+          "url": "{{baseUrl}}/item-category/standard-balls",
+          "assert": [
+            "$status == 200",
+            "name == 'standard-balls'",
+            "items is not null",
+            "pocket is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Item Fling Effects",
+      "tags": ["items"],
+      "tests": [
+        {
+          "name": "GET /item-fling-effect list returns all fling effects",
+          "method": "GET",
+          "url": "{{baseUrl}}/item-fling-effect",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /item-fling-effect/badly-poison returns fling effect",
+          "method": "GET",
+          "url": "{{baseUrl}}/item-fling-effect/badly-poison",
+          "assert": [
+            "$status == 200",
+            "name == 'badly-poison'",
+            "effect_entries is not null",
+            "items is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Item Pockets",
+      "tags": ["items"],
+      "tests": [
+        {
+          "name": "GET /item-pocket list returns all item pockets",
+          "method": "GET",
+          "url": "{{baseUrl}}/item-pocket",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /item-pocket/medicine returns medicine pocket",
+          "method": "GET",
+          "url": "{{baseUrl}}/item-pocket/medicine",
+          "assert": [
+            "$status == 200",
+            "name == 'medicine'",
+            "categories is not null",
+            "names is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Locations",
+      "tags": ["locations"],
+      "tests": [
+        {
+          "name": "GET /location list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/location?limit=10",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /location/pallet-town returns Pallet Town",
+          "method": "GET",
+          "url": "{{baseUrl}}/location/pallet-town",
+          "assert": [
+            "$status == 200",
+            "name == 'pallet-town'",
+            "region is not null",
+            "areas is not null",
+            "names is not null",
+            "game_indices is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Location Areas",
+      "tags": ["locations"],
+      "tests": [
+        {
+          "name": "GET /location-area list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/location-area?limit=10",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /location-area/pallet-town-area returns area data",
+          "method": "GET",
+          "url": "{{baseUrl}}/location-area/pallet-town-area",
+          "assert": [
+            "$status == 200",
+            "name == 'pallet-town-area'",
+            "location is not null",
+            "encounter_method_rates is not null",
+            "pokemon_encounters is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pal Park Areas",
+      "tags": ["locations"],
+      "tests": [
+        {
+          "name": "GET /pal-park-area list returns all areas",
+          "method": "GET",
+          "url": "{{baseUrl}}/pal-park-area",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /pal-park-area/forest returns forest area",
+          "method": "GET",
+          "url": "{{baseUrl}}/pal-park-area/forest",
+          "assert": [
+            "$status == 200",
+            "name == 'forest'",
+            "names is not null",
+            "pokemon_encounters is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Regions",
+      "tags": ["locations"],
+      "tests": [
+        {
+          "name": "GET /region list returns all regions",
+          "method": "GET",
+          "url": "{{baseUrl}}/region",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /region/kanto returns Kanto region",
+          "method": "GET",
+          "url": "{{baseUrl}}/region/kanto",
+          "assert": [
+            "$status == 200",
+            "name == 'kanto'",
+            "locations is not null",
+            "main_generation is not null",
+            "names is not null",
+            "pokedexes is not null",
+            "version_groups is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Machines",
+      "tags": ["machines"],
+      "tests": [
+        {
+          "name": "GET /machine list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/machine?limit=10",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /machine/1 returns TM01 data",
+          "method": "GET",
+          "url": "{{baseUrl}}/machine/1",
+          "assert": [
+            "$status == 200",
+            "id == 1",
+            "item is not null",
+            "move is not null",
+            "version_group is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Moves",
+      "tags": ["smoke", "moves"],
+      "tests": [
+        {
+          "name": "GET /move list returns paginated results",
+          "method": "GET",
+          "url": "{{baseUrl}}/move?limit=10",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /move/tackle returns Tackle move",
+          "method": "GET",
+          "url": "{{baseUrl}}/move/tackle",
+          "assert": [
+            "$status == 200",
+            "name == 'tackle'",
+            "accuracy is not null",
+            "power is not null",
+            "pp is not null",
+            "type is not null",
+            "damage_class is not null",
+            "effect_entries is not null"
+          ]
+        },
+        {
+          "name": "GET /move/flamethrower returns Flamethrower move",
+          "method": "GET",
+          "url": "{{baseUrl}}/move/flamethrower",
+          "assert": ["$status == 200", "name == 'flamethrower'", "power == 90"]
+        }
+      ]
+    },
+    {
+      "name": "Move Ailments",
+      "tags": ["moves"],
+      "tests": [
+        {
+          "name": "GET /move-ailment list returns all ailments",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-ailment",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /move-ailment/paralysis returns paralysis ailment",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-ailment/paralysis",
+          "assert": [
+            "$status == 200",
+            "name == 'paralysis'",
+            "moves is not null",
+            "names is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Move Battle Styles",
+      "tags": ["moves"],
+      "tests": [
+        {
+          "name": "GET /move-battle-style list returns all battle styles",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-battle-style",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /move-battle-style/attack returns attack style",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-battle-style/attack",
+          "assert": [
+            "$status == 200",
+            "name == 'attack'",
+            "names is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Move Categories",
+      "tags": ["moves"],
+      "tests": [
+        {
+          "name": "GET /move-category list returns all categories",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-category",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /move-category/damage returns damage category",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-category/damage",
+          "assert": [
+            "$status == 200",
+            "name == 'damage'",
+            "moves is not null",
+            "descriptions is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Move Damage Classes",
+      "tags": ["moves"],
+      "tests": [
+        {
+          "name": "GET /move-damage-class list returns all damage classes",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-damage-class",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /move-damage-class/physical returns physical class",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-damage-class/physical",
+          "assert": [
+            "$status == 200",
+            "name == 'physical'",
+            "moves is not null",
+            "descriptions is not null",
+            "names is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Move Learn Methods",
+      "tags": ["moves"],
+      "tests": [
+        {
+          "name": "GET /move-learn-method list returns all learn methods",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-learn-method",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /move-learn-method/level-up returns level-up method",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-learn-method/level-up",
+          "assert": [
+            "$status == 200",
+            "name == 'level-up'",
+            "descriptions is not null",
+            "names is not null",
+            "version_groups is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Move Targets",
+      "tags": ["moves"],
+      "tests": [
+        {
+          "name": "GET /move-target list returns all targets",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-target",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /move-target/selected-pokemon returns target data",
+          "method": "GET",
+          "url": "{{baseUrl}}/move-target/selected-pokemon",
+          "assert": [
+            "$status == 200",
+            "name == 'selected-pokemon'",
+            "moves is not null",
+            "descriptions is not null",
+            "names is not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Languages",
+      "tags": ["utility"],
+      "tests": [
+        {
+          "name": "GET /language list returns all languages",
+          "method": "GET",
+          "url": "{{baseUrl}}/language",
+          "assert": ["$status == 200", "count is not null", "results is not null"]
+        },
+        {
+          "name": "GET /language/en returns English language",
+          "method": "GET",
+          "url": "{{baseUrl}}/language/en",
+          "assert": [
+            "$status == 200",
+            "name == 'en'",
+            "official is not null",
+            "iso639 is not null",
+            "iso3166 is not null",
+            "names is not null"
+          ]
+        },
+        {
+          "name": "GET /language/ja returns Japanese language",
+          "method": "GET",
+          "url": "{{baseUrl}}/language/ja",
+          "assert": ["$status == 200", "name == 'ja'", "names.language.name=='it'"]
+        }
+      ]
+    }
+  ]
+}

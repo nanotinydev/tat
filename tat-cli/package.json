@@ -1,0 +1,51 @@
+{
+  "name": "@nanotiny/tiny-api-test",
+  "version": "0.0.7",
+  "description": "Tiny API Test — a JSON-driven API testing CLI powered by @nanotiny/json-expression",
+  "type": "module",
+  "bin": {
+    "tat": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "schema.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run lint && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@nanotiny/json-expression": "^0.0.10",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "keywords": [
+    "api",
+    "api-testing",
+    "test",
+    "integration-test",
+    "smoke-test",
+    "cli",
+    "json",
+    "http",
+    "junit"
+  ],
+  "author": "NanoTiny",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,50 @@
+name: Publish VS Code Extension
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: vscode-extension
+        run: npm install
+
+      - name: Lint
+        working-directory: vscode-extension
+        run: npm run lint
+
+      - name: Build
+        working-directory: vscode-extension
+        run: npm run build
+
+      - name: Publish to VS Code Marketplace
+        working-directory: vscode-extension
+        run: npx --no-install vsce publish --no-dependencies
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Bump patch version for next release
+        working-directory: vscode-extension
+        run: npm version patch --no-git-tag-version
+
+      - name: Commit next version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vscode-extension/package.json
+          git commit -m "chore(vscode): bump version after marketplace publish"
+
+      - name: Push next version
+        run: git push origin HEAD:${GITHUB_REF_NAME}

@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://unpkg.com/@nanotiny/tiny-api-test/schema.json",
+  "title": "tat test file",
+  "description": "Schema for tiny-api-test (tat) JSON test files",
+  "type": "object",
+  "required": ["suites"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference URL"
+    },
+    "env": {
+      "description": "Environment variables — inline object or path to a JSON file",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path to a JSON file containing environment variables"
+        },
+        {
+          "type": "object",
+          "description": "Inline environment variables",
+          "additionalProperties": { "type": "string" }
+        }
+      ]
+    },
+    "setup": {
+      "type": "string",
+      "description": "Shell command run before tests. Its JSON stdout is merged into env."
+    },
+    "timeout": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Default request timeout in milliseconds for all tests. Per-test timeout overrides this."
+    },
+    "suites": {
+      "type": "array",
+      "description": "List of test suites",
+      "items": { "$ref": "#/$defs/Suite" }
+    }
+  },
+  "$defs": {
+    "Suite": {
+      "type": "object",
+      "required": ["name", "tests"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Suite name"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags used to filter suites via --tag",
+          "items": { "type": "string" }
+        },
+        "skip": {
+          "type": "boolean",
+          "description": "Skip all tests in this suite"
+        },
+        "tests": {
+          "type": "array",
+          "description": "List of tests in this suite",
+          "items": { "$ref": "#/$defs/Test" }
+        }
+      }
+    },
+    "Test": {
+      "type": "object",
+      "required": ["name", "method", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Test name"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"],
+          "description": "HTTP method"
+        },
+        "url": {
+          "type": "string",
+          "description": "Request URL. Supports {{variable}} interpolation."
+        },
+        "headers": {
+          "type": "object",
+          "description": "HTTP headers as key-value pairs. Supports {{variable}} interpolation.",
+          "additionalProperties": { "type": "string" }
+        },
+        "body": {
+          "description": "Request body. Objects are sent as JSON with Content-Type: application/json."
+        },
+        "assert": {
+          "type": "array",
+          "description": "Assertion expressions evaluated against the response context ($status, $headers, $body, $duration, and body fields spread at root)",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "capture": {
+          "type": "object",
+          "description": "Extract values from the response to use in later tests via {{variable}} interpolation",
+          "additionalProperties": { "type": "string" }
+        },
+        "response": {
+          "description": "Include response body and/or headers in test output",
+          "oneOf": [
+            {
+              "type": "boolean",
+              "enum": [true],
+              "description": "Include both response body and headers"
+            },
+            {
+              "type": "object",
+              "description": "Selectively include response body and/or headers",
+              "additionalProperties": false,
+              "properties": {
+                "body": {
+                  "type": "boolean",
+                  "enum": [true],
+                  "description": "Include response body in output"
+                },
+                "header": {
+                  "type": "boolean",
+                  "enum": [true],
+                  "description": "Include response headers in output"
+                }
+              }
+            }
+          ]
+        },
+        "skip": {
+          "type": "boolean",
+          "description": "Skip this test without failing the run"
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Request timeout in milliseconds for this test. Overrides the file-level timeout and --timeout flag."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "name": "tat-test-runner",
+  "displayName": "Tiny API Test (tat)",
+  "description": "Run and explore tat API test files in VS Code — Test Explorer integration and inline CodeLens buttons",
+  "version": "0.1.7",
+  "publisher": "nanotiny",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nanotiny/tiny-api-tests"
+  },
+  "engines": {
+    "vscode": "^1.87.0"
+  },
+  "categories": [
+    "Testing"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/*.tat.json",
+    "workspaceContains:**/*.tat.yml",
+    "workspaceContains:**/*.tat.yaml",
+    "onLanguage:json",
+    "onLanguage:yaml"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "jsonValidation": [
+      {
+        "fileMatch": "*.tat.json",
+        "url": "https://unpkg.com/@nanotiny/tiny-api-test/schema.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "json",
+        "extensions": [
+          ".tat.json"
+        ]
+      },
+      {
+        "id": "yaml",
+        "extensions": [
+          ".tat.yml",
+          ".tat.yaml"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "tat.runFile",
+        "title": "tat: Run File"
+      },
+      {
+        "command": "tat.runSuite",
+        "title": "tat: Run Suite"
+      },
+      {
+        "command": "tat.runTest",
+        "title": "tat: Run Test"
+      },
+      {
+        "command": "tat.validateFile",
+        "title": "tat: Validate File"
+      }
+    ],
+    "configuration": {
+      "title": "Tiny API Test",
+      "properties": {
+        "tat.testFilePattern": {
+          "type": "string",
+          "default": "**/*.tat.{json,yml,yaml}",
+          "description": "Glob pattern used to discover tat test files in the workspace."
+        },
+        "tat.cliPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the tat binary. Leave empty to auto-detect (node_modules/.bin/tat, tat-cli/, then npx tat)."
+        },
+        "tat.timeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Timeout in milliseconds for tat CLI invocations from the extension."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "build:watch": "node esbuild.js --watch",
+    "lint": "tsc --noEmit",
+    "package": "vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.87.0",
+    "@vscode/vsce": "^2.24.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0"
+  }
+}

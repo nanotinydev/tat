@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/tiny-api-test/schema.json",
+  "env": {
+    "baseUrl": "https://httpbin.org"
+  },
+  "setup": "node -e \"console.log(JSON.stringify({customHeader:'tat-setup-hook'}))\"",
+  "suites": [
+    {
+      "name": "Setup hook test",
+      "tags": ["setup"],
+      "tests": [
+        {
+          "name": "Header injected by setup is sent",
+          "method": "GET",
+          "url": "{{baseUrl}}/get",
+          "headers": {
+            "X-Setup-Header": "{{customHeader}}"
+          },
+          "assert": [
+            "$status == 200",
+            "headers.X-Setup-Header == \"tat-setup-hook\""
+          ]
+        }
+      ]
+    }
+  ]
+}

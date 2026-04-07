@@ -1,0 +1,473 @@
+{
+  "$schema": "https://unpkg.com/tiny-api-test/schema.json",
+  "env": {
+    "baseUrl": "https://httpbin.org"
+  },
+  "suites": [
+    {
+      "name": "HTTP Methods",
+      "tags": ["smoke", "methods"],
+      "tests": [
+        {
+          "name": "GET /get returns 200 with url field",
+          "method": "GET",
+          "url": "{{baseUrl}}/get",
+          "assert": ["$status == 200", "url is not null", "headers is not null"],
+          "response": true
+        },
+        {
+          "name": "POST /post echoes JSON body",
+          "method": "POST",
+          "url": "{{baseUrl}}/post",
+          "body": { "hello": "world" },
+          "assert": ["$status == 200", "json.hello == 'world'"]
+        },
+        {
+          "name": "PUT /put echoes JSON body",
+          "method": "PUT",
+          "url": "{{baseUrl}}/put",
+          "body": { "value": 42 },
+          "assert": ["$status == 200", "json.value == 42"]
+        },
+        {
+          "name": "PATCH /patch echoes JSON body",
+          "method": "PATCH",
+          "url": "{{baseUrl}}/patch",
+          "body": { "op": "replace" },
+          "assert": ["$status == 200", "json.op == 'replace'"]
+        },
+        {
+          "name": "DELETE /delete returns 200",
+          "method": "DELETE",
+          "url": "{{baseUrl}}/delete",
+          "assert": ["$status == 200", "url is not null"]
+        }
+      ]
+    },
+    {
+      "name": "Anything",
+      "tags": ["smoke", "anything"],
+      "tests": [
+        {
+          "name": "GET /anything echoes request",
+          "method": "GET",
+          "url": "{{baseUrl}}/anything",
+          "response":true,
+          "assert": ["$status == 200", "method == 'GET'", "url is not null"]
+        },
+        {
+          "name": "POST /anything echoes method and body",
+          "method": "POST",
+          "url": "{{baseUrl}}/anything",
+          "body": { "key": "tat" },
+          "assert": ["$status == 200", "method == 'POST'", "json.key == 'tat'"]
+        },
+        {
+          "name": "GET /anything/{id} echoes path",
+          "method": "GET",
+          "url": "{{baseUrl}}/anything/my-resource-123",
+          "assert": ["$status == 200", "url contains 'my-resource-123'"]
+        }
+      ]
+    },
+    {
+      "name": "Request Inspection",
+      "tags": ["smoke", "inspection"],
+      "tests": [
+        {
+          "name": "GET /headers returns request headers",
+          "method": "GET",
+          "url": "{{baseUrl}}/headers",
+          "headers": { "X-Test-Header": "tat-value" },
+          "assert": ["$status == 200", "headers is not null", "headers.X-Test-Header == 'tat-value'"]
+        },
+        {
+          "name": "GET /ip returns origin IP",
+          "method": "GET",
+          "url": "{{baseUrl}}/ip",
+          "assert": ["$status == 200", "origin is not null"]
+        },
+        {
+          "name": "GET /user-agent returns user agent",
+          "method": "GET",
+          "url": "{{baseUrl}}/user-agent",
+          "assert": ["$status == 200", "user-agent is not null"]
+        }
+      ]
+    },
+    {
+      "name": "Response Inspection",
+      "tags": ["response", "inspection"],
+      "tests": [
+        {
+          "name": "GET /cache returns 200 (no If-None-Match)",
+          "method": "GET",
+          "url": "{{baseUrl}}/cache",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /cache/60 sets Cache-Control max-age",
+          "method": "GET",
+          "url": "{{baseUrl}}/cache/60",
+          "assert": ["$status == 200", "$headers.cache-control contains '60'"]
+        },
+        {
+          "name": "GET /response-headers sets custom header",
+          "method": "GET",
+          "url": "{{baseUrl}}/response-headers?X-My-Header=hello",
+          "assert": ["$status == 200", "$headers.x-my-header == 'hello'"]
+        },
+        {
+          "name": "GET /etag/{etag} returns ETag header",
+          "method": "GET",
+          "url": "{{baseUrl}}/etag/abc123",
+          "assert": ["$status == 200", "$headers.etag is not null"]
+        }
+      ]
+    },
+    {
+      "name": "Response Formats",
+      "tags": ["formats"],
+      "tests": [
+        {
+          "name": "GET /json captures slideshow data with expressions",
+          "method": "GET",
+          "url": "{{baseUrl}}/json",
+          "assert": ["$status == 200", "slideshow is not null"],
+          "capture": {
+            "slideshowAuthor": "slideshow.author",
+            "firstSlideTitle": "slideshow.slides.title | $index == 0"
+          }
+        },
+        {
+          "name": "Captured expression values echoed via /get",
+          "method": "GET",
+          "url": "{{baseUrl}}/get?author={{slideshowAuthor}}&title={{firstSlideTitle}}",
+          "assert": [
+            "$status == 200",
+            "args.author is not null",
+            "args.title is not null"
+          ]
+        },
+        {
+          "name": "GET /xml returns XML content",
+          "method": "GET",
+          "url": "{{baseUrl}}/xml",
+          "assert": ["$status == 200", "$headers.content-type contains 'xml'"]
+        },
+        {
+          "name": "GET /html returns HTML content",
+          "method": "GET",
+          "url": "{{baseUrl}}/html",
+          "assert": ["$status == 200", "$headers.content-type contains 'html'"]
+        },
+        {
+          "name": "GET /gzip returns gzip-encoded response",
+          "method": "GET",
+          "url": "{{baseUrl}}/gzip",
+          "assert": ["$status == 200", "gzipped == true"]
+        },
+        {
+          "name": "GET /deflate returns deflate-encoded response",
+          "method": "GET",
+          "url": "{{baseUrl}}/deflate",
+          "assert": ["$status == 200", "deflated == true"]
+        },
+        {
+          "name": "GET /brotli returns brotli-encoded response",
+          "method": "GET",
+          "url": "{{baseUrl}}/brotli",
+          "assert": ["$status == 200", "brotli == true"]
+        },
+        {
+          "name": "GET /encoding/utf8 returns UTF-8 content",
+          "method": "GET",
+          "url": "{{baseUrl}}/encoding/utf8",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /robots.txt returns plain text",
+          "method": "GET",
+          "url": "{{baseUrl}}/robots.txt",
+          "assert": ["$status == 200", "$headers.content-type contains 'text'"]
+        },
+        {
+          "name": "GET /deny returns plain text denial",
+          "method": "GET",
+          "url": "{{baseUrl}}/deny",
+          "assert": ["$status == 200"]
+        }
+      ]
+    },
+    {
+      "name": "Dynamic Data",
+      "tags": ["dynamic"],
+      "tests": [
+        {
+          "name": "GET /uuid returns a UUID",
+          "method": "GET",
+          "url": "{{baseUrl}}/uuid",
+          "assert": ["$status == 200", "uuid is not null"],
+          "capture": { "capturedUuid": "uuid" }
+        },
+        {
+          "name": "Captured UUID is echoed as query param",
+          "method": "GET",
+          "url": "{{baseUrl}}/get?id={{capturedUuid}}",
+          "assert": ["$status == 200", "args.id is not null"]
+        },
+        {
+          "name": "GET /base64/{value} decodes base64",
+          "method": "GET",
+          "url": "{{baseUrl}}/base64/SGVsbG8gV29ybGQ=",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /bytes/16 returns 16 random bytes",
+          "method": "GET",
+          "url": "{{baseUrl}}/bytes/16",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /stream/3 streams 3 JSON lines",
+          "method": "GET",
+          "url": "{{baseUrl}}/stream/3",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /stream-bytes/64 streams 64 bytes",
+          "method": "GET",
+          "url": "{{baseUrl}}/stream-bytes/64",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /links/5 returns page with 5 links",
+          "method": "GET",
+          "url": "{{baseUrl}}/links/5",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /range/16 returns ranged bytes",
+          "method": "GET",
+          "url": "{{baseUrl}}/range/16",
+          "assert": ["$status == 200"]
+        }
+      ]
+    },
+    {
+      "name": "Status Codes",
+      "tags": ["status"],
+      "tests": [
+        {
+          "name": "GET /status/200 returns 200",
+          "method": "GET",
+          "url": "{{baseUrl}}/status/200",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /status/201 returns 201",
+          "method": "GET",
+          "url": "{{baseUrl}}/status/201",
+          "assert": ["$status == 201"]
+        },
+        {
+          "name": "GET /status/204 returns 204",
+          "method": "GET",
+          "url": "{{baseUrl}}/status/204",
+          "assert": ["$status == 204"]
+        },
+        {
+          "name": "GET /status/400 returns 400",
+          "method": "GET",
+          "url": "{{baseUrl}}/status/400",
+          "assert": ["$status == 400"]
+        },
+        {
+          "name": "GET /status/401 returns 401",
+          "method": "GET",
+          "url": "{{baseUrl}}/status/401",
+          "assert": ["$status == 401"]
+        },
+        {
+          "name": "GET /status/403 returns 403",
+          "method": "GET",
+          "url": "{{baseUrl}}/status/403",
+          "assert": ["$status == 403"]
+        },
+        {
+          "name": "GET /status/404 returns 404",
+          "method": "GET",
+          "url": "{{baseUrl}}/status/404",
+          "assert": ["$status == 404"]
+        },
+        {
+          "name": "GET /status/500 returns 500",
+          "method": "GET",
+          "url": "{{baseUrl}}/status/500",
+          "assert": ["$status == 500"]
+        },
+        {
+          "name": "GET /status/503 returns 503",
+          "method": "GET",
+          "url": "{{baseUrl}}/status/503",
+          "assert": ["$status == 503"]
+        }
+      ]
+    },
+    {
+      "name": "Redirects",
+      "tags": ["redirects"],
+      "tests": [
+        {
+          "name": "GET /redirect/1 follows 1 redirect to /get",
+          "method": "GET",
+          "url": "{{baseUrl}}/redirect/1",
+          "assert": ["$status == 200", "url contains '/get'"]
+        },
+        {
+          "name": "GET /redirect-to redirects to target URL",
+          "method": "GET",
+          "url": "{{baseUrl}}/redirect-to?url=https://httpbin.org/get",
+          "assert": ["$status == 200", "url contains '/get'"]
+        },
+        {
+          "name": "GET /relative-redirect/1 follows relative redirect",
+          "method": "GET",
+          "url": "{{baseUrl}}/relative-redirect/1",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /absolute-redirect/1 follows absolute redirect",
+          "method": "GET",
+          "url": "{{baseUrl}}/absolute-redirect/1",
+          "assert": ["$status == 200"]
+        }
+      ]
+    },
+    {
+      "name": "Cookies",
+      "tags": ["cookies"],
+      "tests": [
+        {
+          "name": "GET /cookies/set sets a cookie and follows redirect",
+          "method": "GET",
+          "url": "{{baseUrl}}/cookies/set?session=abc123",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /cookies returns cookies object",
+          "method": "GET",
+          "url": "{{baseUrl}}/cookies",
+          "assert": ["$status == 200"]
+        },
+        {
+          "name": "GET /cookies/delete removes a cookie",
+          "method": "GET",
+          "url": "{{baseUrl}}/cookies/delete?session=",
+          "assert": ["$status == 200"]
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "tags": ["auth"],
+      "tests": [
+        {
+          "name": "GET /basic-auth with correct credentials returns 200",
+          "method": "GET",
+          "url": "{{baseUrl}}/basic-auth/user/passwd",
+          "headers": { "Authorization": "Basic dXNlcjpwYXNzd2Q=" },
+          "assert": ["$status == 200", "authenticated == true", "user == 'user'"]
+        },
+        {
+          "name": "GET /basic-auth with wrong credentials returns 401",
+          "method": "GET",
+          "url": "{{baseUrl}}/basic-auth/user/passwd",
+          "headers": { "Authorization": "Basic dXNlcjp3cm9uZw==" },
+          "assert": ["$status == 401"]
+        },
+        {
+          "name": "GET /bearer with valid token returns 200",
+          "method": "GET",
+          "url": "{{baseUrl}}/bearer",
+          "headers": { "Authorization": "Bearer my-test-token" },
+          "assert": ["$status == 200", "authenticated == true", "token == 'my-test-token'"]
+        },
+        {
+          "name": "GET /bearer without token returns 401",
+          "method": "GET",
+          "url": "{{baseUrl}}/bearer",
+          "assert": ["$status == 401"]
+        },
+        {
+          "name": "GET /hidden-basic-auth with correct credentials returns 200",
+          "method": "GET",
+          "url": "{{baseUrl}}/hidden-basic-auth/user/passwd",
+          "headers": { "Authorization": "Basic dXNlcjpwYXNzd2Q=" },
+          "assert": ["$status == 200", "authenticated == true"]
+        },
+        {
+          "name": "GET /hidden-basic-auth with wrong credentials returns 404",
+          "method": "GET",
+          "url": "{{baseUrl}}/hidden-basic-auth/user/passwd",
+          "assert": ["$status == 404"]
+        }
+      ]
+    },
+    {
+      "name": "Images",
+      "tags": ["images"],
+      "tests": [
+        {
+          "name": "GET /image returns image (content negotiation)",
+          "method": "GET",
+          "url": "{{baseUrl}}/image",
+          "headers": { "Accept": "image/png" },
+          "assert": ["$status == 200", "$headers.content-type contains 'image'"]
+        },
+        {
+          "name": "GET /image/png returns PNG image",
+          "method": "GET",
+          "url": "{{baseUrl}}/image/png",
+          "assert": ["$status == 200", "$headers.content-type == 'image/png'"]
+        },
+        {
+          "name": "GET /image/jpeg returns JPEG image",
+          "method": "GET",
+          "url": "{{baseUrl}}/image/jpeg",
+          "assert": ["$status == 200", "$headers.content-type == 'image/jpeg'"]
+        },
+        {
+          "name": "GET /image/webp returns WebP image",
+          "method": "GET",
+          "url": "{{baseUrl}}/image/webp",
+          "assert": ["$status == 200", "$headers.content-type == 'image/webp'"]
+        },
+        {
+          "name": "GET /image/svg returns SVG image",
+          "method": "GET",
+          "url": "{{baseUrl}}/image/svg",
+          "assert": ["$status == 200", "$headers.content-type contains 'svg'"]
+        }
+      ]
+    },
+    {
+      "name": "Delays",
+      "tags": ["delay"],
+      "tests": [
+        {
+          "name": "GET /delay/1 responds after ~1 second",
+          "method": "GET",
+          "url": "{{baseUrl}}/delay/1",
+          "assert": ["$status == 200", "url is not null"]
+        },
+        {
+          "name": "GET /drip streams data over time",
+          "method": "GET",
+          "url": "{{baseUrl}}/drip?numbytes=5&duration=1&delay=0",
+          "assert": ["$status == 200"]
+        }
+      ]
+    }
+  ]
+}

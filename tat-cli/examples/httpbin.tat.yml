@@ -1,0 +1,74 @@
+# Httpbin YAML example — same tests as httpbin-full.tat.json (subset)
+env:
+  baseUrl: https://httpbin.org
+
+suites:
+  - name: HTTP Methods
+    tags: [smoke, methods]
+    tests:
+      - name: GET /get returns 200 with url field
+        method: GET
+        url: "{{baseUrl}}/get"
+        assert:
+          - "$status == 200"
+          - "url is not null"
+          - "headers is not null"
+        response: true
+
+      - name: POST /post echoes JSON body
+        method: POST
+        url: "{{baseUrl}}/post"
+        body:
+          hello: world
+        assert:
+          - "$status == 200"
+          - "json.hello == 'world'"
+
+      - name: PUT /put echoes JSON body
+        method: PUT
+        url: "{{baseUrl}}/put"
+        body:
+          value: 42
+        assert:
+          - "$status == 200"
+          - "json.value == 42"
+
+      - name: DELETE /delete returns 200
+        method: DELETE
+        url: "{{baseUrl}}/delete"
+        assert:
+          - "$status == 200"
+          - "url is not null"
+
+  - name: Status Codes
+    tags: [status]
+    tests:
+      - name: "GET /status/404 returns 404"
+        method: GET
+        url: "{{baseUrl}}/status/404"
+        assert:
+          - "$status == 404"
+
+      - name: "GET /status/201 returns 201"
+        method: GET
+        url: "{{baseUrl}}/status/201"
+        assert:
+          - "$status == 201"
+
+  - name: Captures
+    tags: [capture]
+    tests:
+      - name: Capture origin from /get
+        method: GET
+        url: "{{baseUrl}}/get"
+        assert:
+          - "$status == 200"
+        capture:
+          myOrigin: origin
+
+      - name: Use captured origin in URL
+        method: GET
+        url: "{{baseUrl}}/get?origin={{myOrigin}}"
+        assert:
+          - "$status == 200"
+          - "args.origin is not null"
