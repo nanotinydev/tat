@@ -1,6 +1,6 @@
 {
   "name": "@nanotiny/tiny-api-test",
-  "version": "0.0.7",
+  "version": "1.0.0",
   "description": "Tiny API Test — a JSON-driven API testing CLI powered by @nanotiny/json-expression",
   "type": "module",
   "bin": {
@@ -45,6 +45,15 @@
   ],
   "author": "NanoTiny",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nanotinydev/tat",
+    "directory": "tat-cli"
+  },
+  "homepage": "https://nanotinydev.github.io/tat/",
+  "bugs": {
+    "url": "https://github.com/nanotinydev/tat/issues"
+  },
   "engines": {
     "node": ">=18"
   }

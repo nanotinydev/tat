@@ -2,7 +2,7 @@
   "name": "tat-test-runner",
   "displayName": "Tiny API Test (tat)",
   "description": "Run and explore tat API test files in VS Code — Test Explorer integration and inline CodeLens buttons",
-  "version": "0.1.7",
+  "version": "1.0.0",
   "publisher": "nanotiny",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -12,7 +12,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nanotiny/tiny-api-tests"
+    "url": "https://github.com/nanotinydev/tat",
+    "directory": "vscode-extension"
+  },
+  "homepage": "https://nanotinydev.github.io/tat/",
+  "bugs": {
+    "url": "https://github.com/nanotinydev/tat/issues"
   },
   "engines": {
     "vscode": "^1.87.0"
