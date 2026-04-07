@@ -1,6 +1,6 @@
 {
   "name": "@nanotiny/tiny-api-test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tiny API Test — a JSON-driven API testing CLI powered by @nanotiny/json-expression",
   "type": "module",
   "bin": {
