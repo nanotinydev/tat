@@ -1061,6 +1061,24 @@ tat run tests.json --env-cmd "node -e \"console.log(JSON.stringify({token:proces
 
 ## CI Integration
 
+### GitHub Actions example
+
+This repository includes a workflow that builds the CLI and runs the large checked-in PokeAPI example as a CI proof:
+
+```yaml
+- name: Build CLI
+  working-directory: tat-cli
+  run: npm run build
+
+- name: Run PokeAPI example with JUnit output
+  working-directory: tat-cli
+  run: |
+    mkdir -p ../artifacts
+    node dist/cli.js run ../examples/pokeapi-full.tat.json --output junit --out ../artifacts/pokeapi-example.junit.xml
+```
+
+That pattern gives CI systems a real `.tat` file to execute plus a JUnit artifact they can archive or parse.
+
 ### Using environment-specific configs
 
 ```bash
