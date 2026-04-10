@@ -1,0 +1,40 @@
+name: Example CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pokeapi-example:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install CLI deps
+        working-directory: tat-cli
+        run: npm ci
+
+      - name: Build CLI
+        working-directory: tat-cli
+        run: npm run build
+
+      - name: Run PokeAPI example
+        working-directory: tat-cli
+        run: |
+          mkdir -p ../artifacts
+          node dist/cli.js run ../examples/pokeapi-full.tat.json --output junit --out ../artifacts/pokeapi-example.junit.xml
+
+      - name: Upload PokeAPI JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pokeapi-example-junit
+          path: artifacts/pokeapi-example.junit.xml
+          if-no-files-found: error
