@@ -33,17 +33,27 @@ function isYamlFile(fileName: string): boolean {
 }
 
 function parseTatFile(text: string, filePath: string): PromptTatFile {
+  let parsed: unknown;
   try {
-    const parsed = isYamlFile(filePath)
+    parsed = isYamlFile(filePath)
       ? parseYaml(text)
       : JSON.parse(text);
-
-    return parsed as PromptTatFile;
   } catch (error) {
     const format = isYamlFile(filePath) ? 'YAML' : 'JSON';
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`${format} parse error in test file ${filePath}: ${message}`);
   }
+
+  if (
+    parsed === null ||
+    typeof parsed !== 'object' ||
+    !('suites' in parsed) ||
+    !Array.isArray((parsed as { suites?: unknown }).suites)
+  ) {
+    throw new Error(`Invalid test file ${filePath}: expected an object with a suites array.`);
+  }
+
+  return parsed as PromptTatFile;
 }
 
 async function resolveEnv(

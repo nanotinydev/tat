@@ -93,10 +93,10 @@ export function formatMissingVariablesError(missing: MissingVariable[]): string 
   const lines = missing.map((entry) => {
     const variableRef = `{{${entry.variable}}}`;
     if (entry.sourceTestName) {
-      return `Selected test "${entry.testName}" requires "${variableRef}", which is normally captured by earlier test "${entry.sourceTestName}".`;
+      return `Selected test "${entry.testName}" in suite "${entry.suiteName}" requires "${variableRef}", which is normally captured by earlier test "${entry.sourceTestName}".`;
     }
 
-    return `Selected test "${entry.testName}" requires "${variableRef}", but it is not defined in env or supplied via --variables.`;
+    return `Selected test "${entry.testName}" in suite "${entry.suiteName}" requires "${variableRef}", but it is not defined in env or supplied via --variables.`;
   });
 
   const suggestions = missing.map((entry) => `--variables ${entry.variable}=<value>`).join(' ');

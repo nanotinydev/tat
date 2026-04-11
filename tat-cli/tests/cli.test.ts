@@ -200,6 +200,19 @@ describe('runCommand', () => {
     );
   });
 
+  it('stores manual variables in a null-prototype object', async () => {
+    await runCommand('test.json', {
+      output: 'console',
+      variables: ['__proto__=polluted', 'workspaceId=ws-123'],
+    });
+
+    const variables = vi.mocked(runner.run).mock.calls[0][2]?.variables as Record<string, string>;
+    expect(Object.getPrototypeOf(variables)).toBeNull();
+    expect(variables.workspaceId).toBe('ws-123');
+    expect(Object.prototype.hasOwnProperty.call(variables, '__proto__')).toBe(true);
+    expect(variables.__proto__).toBe('polluted');
+  });
+
   it('exits with code 2 when a --variables entry is malformed', async () => {
     await runCommand('test.json', { output: 'console', variables: ['workspaceId'] });
 
@@ -224,13 +237,13 @@ describe('runCommand', () => {
 
   it('surfaces isolated-test missing-variable errors as configuration errors', async () => {
     vi.mocked(runner.run).mockRejectedValue(new Error(
-      'Selected test "Create project" requires "{{workspaceId}}", which is normally captured by earlier test "Create workspace".',
+      'Selected test "Create project" in suite "Suite" requires "{{workspaceId}}", which is normally captured by earlier test "Create workspace".',
     ));
 
     await runCommand('test.json', { output: 'console', suite: 'Suite', test: 'Create project' });
 
     expect(console.error).toHaveBeenCalledWith(
-      'Selected test "Create project" requires "{{workspaceId}}", which is normally captured by earlier test "Create workspace".',
+      'Selected test "Create project" in suite "Suite" requires "{{workspaceId}}", which is normally captured by earlier test "Create workspace".',
     );
     expect(exitSpy).toHaveBeenCalledWith(2);
   });

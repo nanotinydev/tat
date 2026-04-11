@@ -52,7 +52,7 @@ async function isDirectory(path: string): Promise<boolean> {
 }
 
 function parseManualVariables(entries: string[] | undefined): Record<string, string> {
-  const variables: Record<string, string> = {};
+  const variables = Object.create(null) as Record<string, string>;
 
   for (const entry of entries ?? []) {
     const separator = entry.indexOf('=');

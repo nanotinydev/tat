@@ -399,6 +399,7 @@ describe('run — test selection', () => {
     await expect(run(suites, {}, { testName: 'Create project' })).rejects.toThrow(MissingVariablesError);
     await expect(run(suites, {}, { testName: 'Create project' })).rejects.toThrow('{{workspaceId}}');
     await expect(run(suites, {}, { testName: 'Create project' })).rejects.toThrow('Create workspace');
+    await expect(run(suites, {}, { testName: 'Create project' })).rejects.toThrow('suite "Suite"');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
