@@ -11,9 +11,9 @@ function needsShell(bin: string): boolean {
   return process.platform === 'win32' && bin.endsWith('.cmd');
 }
 
-/** Wrap a string in double quotes if it contains spaces (for cmd.exe shell execution). */
+/** Quote and escape a string for cmd.exe shell execution. */
 function shellQuote(s: string): string {
-  return s.includes(' ') ? `"${s}"` : s;
+  return `"${s.replace(/"/g, '""').replace(/%/g, '%%')}"`;
 }
 
 /** Find `tat` on PATH using `where` (Windows) or `which` (Unix). Returns undefined if not found. */

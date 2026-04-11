@@ -4,8 +4,7 @@ import { parseTestFile } from './fileParser';
 import { startRunFile, validateFile, TatNotFoundError, TatRunCancelledError } from './tatRunner';
 import { collectRunTargets, type RunTreeNode, type RunTargetSelection } from './runTargets';
 import type { RunResult, TestResult } from './types';
-import { filterSuites, loadAndValidate, resolveEnv } from '../../tat-cli/src/runner.ts';
-import { findMissingVariablesForSelectedTests } from '../../tat-cli/src/variables.ts';
+import { findPromptVariables } from './promptVariables';
 
 interface RunTarget {
   fileUri: vscode.Uri;
@@ -252,15 +251,20 @@ export class TatTestController {
   private async promptForMissingVariables(
     target: RunTarget,
   ): Promise<Record<string, string> | undefined> {
-    if (!target.testFilter) {
+    if (!target.suiteFilter || !target.testFilter) {
       return {};
     }
 
-    const { tatFile, absPath } = await loadAndValidate(target.fileUri.fsPath);
-    const env = await resolveEnv(tatFile.env, absPath);
-    const suites = filterSuites(tatFile.suites, { suiteName: target.suiteFilter });
-    const missing = findMissingVariablesForSelectedTests(suites, env, target.testFilter)
-      .filter((entry) => entry.sourceTestName);
+    const missing = await findPromptVariables(
+      target.fileUri.fsPath,
+      target.suiteFilter,
+      target.testFilter,
+    );
+
+    if (missing === null) {
+      return {};
+    }
+
     const values: Record<string, string> = {};
 
     for (const entry of missing) {
