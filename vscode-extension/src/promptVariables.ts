@@ -33,11 +33,17 @@ function isYamlFile(fileName: string): boolean {
 }
 
 function parseTatFile(text: string, filePath: string): PromptTatFile {
-  const parsed = isYamlFile(filePath)
-    ? parseYaml(text)
-    : JSON.parse(text);
+  try {
+    const parsed = isYamlFile(filePath)
+      ? parseYaml(text)
+      : JSON.parse(text);
 
-  return parsed as PromptTatFile;
+    return parsed as PromptTatFile;
+  } catch (error) {
+    const format = isYamlFile(filePath) ? 'YAML' : 'JSON';
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`${format} parse error in test file ${filePath}: ${message}`);
+  }
 }
 
 async function resolveEnv(
@@ -48,8 +54,19 @@ async function resolveEnv(
   if (typeof env === 'object') return env;
 
   const envPath = path.resolve(path.dirname(filePath), env);
-  const raw = await readFile(envPath, 'utf-8');
-  return JSON.parse(raw) as Record<string, string>;
+  let raw: string;
+  try {
+    raw = await readFile(envPath, 'utf-8');
+  } catch {
+    throw new Error(`Cannot read env file: ${envPath}`);
+  }
+
+  try {
+    return JSON.parse(raw) as Record<string, string>;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Invalid JSON in env file ${envPath}: ${message}`);
+  }
 }
 
 function extractVarRefs(value: unknown): string[] {

@@ -64,6 +64,7 @@ The extension discovers files matching `**/*.tat.{json,yml,yaml}`. Name your tes
 ## Notes
 
 - Running a single test from Test Explorer now keeps the run isolated to that test. Earlier tests in the suite are not executed automatically.
-- If the selected test depends on a value normally captured by an earlier test, the extension prompts for it before launching `tat` unless the file uses `setup`, in which case the CLI run handles runtime env resolution directly.
+- If the selected test depends on a value normally captured by an earlier test, the extension prompts for it before launching `tat` and forwards it via `--variables` when the file does not use `setup`.
+- For files that use `setup`, the extension skips prompting to avoid running `setup` during variable collection. `setup` only covers runtime environment resolution; it does not recreate values captured by earlier tests. When an isolated test requires captured values, run the full suite or pass them manually with `--variables`.
 - The output channel shows the raw `--output json` payload from `tat`, useful for debugging.
 
