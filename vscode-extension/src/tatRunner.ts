@@ -35,6 +35,7 @@ function findTatOnPath(): string | undefined {
 export interface RunFileOptions {
   suiteName?: string;
   testName?: string;
+  variables?: Record<string, string>;
   timeout?: number;
   cliPath?: string;
   cwd?: string;
@@ -135,6 +136,7 @@ export function startRunFile(
     '--output', 'json',
     ...(opts.suiteName ? ['--suite', opts.suiteName] : []),
     ...(opts.testName ? ['--test', opts.testName] : []),
+    ...Object.entries(opts.variables ?? {}).flatMap(([key, value]) => ['--variables', `${key}=${value}`]),
   ];
   const shell = needsShell(bin);
   const execBin = shell ? shellQuote(bin) : bin;

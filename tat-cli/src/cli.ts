@@ -20,6 +20,7 @@ export interface RunCommandOptions {
   tag?: string;
   suite?: string;
   test?: string;
+  variables?: string[];
   output: string;
   out?: string;
   bail?: boolean;
@@ -50,6 +51,26 @@ async function isDirectory(path: string): Promise<boolean> {
   }
 }
 
+function parseManualVariables(entries: string[] | undefined): Record<string, string> {
+  const variables: Record<string, string> = {};
+
+  for (const entry of entries ?? []) {
+    const separator = entry.indexOf('=');
+    if (separator <= 0) {
+      throw new Error(`Invalid --variables entry "${entry}". Expected key=value.`);
+    }
+
+    const key = entry.slice(0, separator).trim();
+    if (key.length === 0) {
+      throw new Error(`Invalid --variables entry "${entry}". Expected key=value.`);
+    }
+
+    variables[key] = entry.slice(separator + 1);
+  }
+
+  return variables;
+}
+
 export async function runSingleFile(
   file: string,
   opts: RunCommandOptions,
@@ -60,6 +81,7 @@ export async function runSingleFile(
 ): Promise<RunResult | null> {
   const { tatFile, absPath } = await loadAndValidate(file);
   const cwd = dirname(absPath);
+  const manualVariables = parseManualVariables(opts.variables);
 
   // 1. Resolve static env
   let env = await resolveEnv(tatFile.env, absPath);
@@ -85,7 +107,7 @@ export async function runSingleFile(
   if (suites.length === 0) return null;
 
   // 4. Warn about undefined variables
-  const warnings = warnUndefinedVars(suites, env);
+  const warnings = warnUndefinedVars(suites, { ...env, ...manualVariables });
   for (const w of warnings) console.warn(w);
 
   // 5. Resolve effective global timeout
@@ -95,6 +117,7 @@ export async function runSingleFile(
     tags,
     suiteName: opts.suite,
     testName: opts.test,
+    variables: manualVariables,
     bail: opts.bail,
     timeout: globalTimeout,
     onSuiteStart: callbacks?.onSuiteStart,
@@ -316,6 +339,7 @@ program
   .option('--bail', 'stop on first test failure')
   .option('--env-cmd <command>', 'run a command before tests; its JSON stdout is merged into env')
   .option('--timeout <ms>', 'request timeout in milliseconds (overrides file-level timeout)', (v) => parseInt(v, 10))
+  .option('--variables <key=value>', 'supply a manual variable value for the run; repeatable', (value, acc: string[] = []) => [...acc, value], [])
   .action(runCommand);
 
 program

@@ -4,6 +4,8 @@ import { parseTestFile } from './fileParser';
 import { startRunFile, validateFile, TatNotFoundError, TatRunCancelledError } from './tatRunner';
 import { collectRunTargets, type RunTreeNode, type RunTargetSelection } from './runTargets';
 import type { RunResult, TestResult } from './types';
+import { filterSuites, loadAndValidate, resolveEnv } from '../../tat-cli/src/runner.ts';
+import { findMissingVariablesForSelectedTests } from '../../tat-cli/src/variables.ts';
 
 interface RunTarget {
   fileUri: vscode.Uri;
@@ -136,9 +138,18 @@ export class TatTestController {
       this.outputChannel.appendLine(`\n--- Running: ${label}${suiteLabel} ---`);
 
       try {
+        const manualVariables = await this.promptForMissingVariables(target);
+        if (manualVariables === undefined) {
+          this.outputChannel.appendLine('Run cancelled.');
+          run.appendOutput('\r\nRun cancelled.\r\n');
+          this.markTargetCancelled(run, target);
+          break;
+        }
+
         const activeRun = startRunFile(target.fileUri.fsPath, workspaceFolders, {
           suiteName: target.suiteFilter,
           testName: target.testFilter,
+          variables: manualVariables,
           cliPath,
           timeout,
         });
@@ -236,6 +247,39 @@ export class TatTestController {
 
     cancellationSubscription.dispose();
     run.end();
+  }
+
+  private async promptForMissingVariables(
+    target: RunTarget,
+  ): Promise<Record<string, string> | undefined> {
+    if (!target.testFilter) {
+      return {};
+    }
+
+    const { tatFile, absPath } = await loadAndValidate(target.fileUri.fsPath);
+    const env = await resolveEnv(tatFile.env, absPath);
+    const suites = filterSuites(tatFile.suites, { suiteName: target.suiteFilter });
+    const missing = findMissingVariablesForSelectedTests(suites, env, target.testFilter)
+      .filter((entry) => entry.sourceTestName);
+    const values: Record<string, string> = {};
+
+    for (const entry of missing) {
+      const variableRef = `{{${entry.variable}}}`;
+      const value = await vscode.window.showInputBox({
+        title: 'Tiny API Test',
+        prompt: `Enter a value for ${variableRef}. It is normally captured by earlier test "${entry.sourceTestName}".`,
+        placeHolder: entry.variable,
+        ignoreFocusOut: true,
+      });
+
+      if (value === undefined) {
+        return undefined;
+      }
+
+      values[entry.variable] = value;
+    }
+
+    return values;
   }
 
   private applyRunResult(

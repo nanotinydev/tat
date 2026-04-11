@@ -307,6 +307,13 @@ env: ./env.local.json
 
 Variables are interpolated in `url`, `headers`, and `body` fields.
 
+You can also inject manual values at run time with repeatable `--variables` flags:
+
+```bash
+tat run tests.tat.yml --suite "Workspace flow" --test "Create project" --variables workspaceId=ws-123
+tat run tests.tat.yml --variables baseUrl=https://api.example.com --variables token=abc123
+```
+
 ---
 
 ## Undefined Variable Warnings
@@ -318,6 +325,8 @@ Before making any HTTP requests, `tat` scans all test fields for `{{variable}}` 
 ```
 
 Warnings do not stop the run. Use `tat validate` to check for them without executing tests.
+
+When you run a single test with `--suite` and `--test`, `tat` keeps that run isolated and does not execute earlier capture-producing tests. If the selected test depends on a missing variable, `tat` fails before making any HTTP call and tells you to either run the suite or pass the value explicitly with `--variables`.
 
 ---
 
@@ -840,6 +849,7 @@ tat run ./tests/          # runs all tat files in the directory
 | `--env-cmd <command>` | Run a shell command before tests; its JSON stdout is merged into env. Overrides `setup` on conflict. |
 | `--timeout <ms>` | Set a global request timeout in milliseconds. Overrides the file-level `timeout`. Per-test `timeout` still takes priority. |
 | `--test <name>` | Run a single test by name. Requires `--suite`. |
+| `--variables <key=value>` | Supply a manual variable value for the run. Repeat the flag to provide multiple values. Manual values override env, setup, env-cmd, and captured values. |
 
 **Examples:**
 
@@ -858,6 +868,9 @@ tat run tests.json --suite "User API"
 
 # Run a single test by name
 tat run tests.json --suite "User API" --test "Get user"
+
+# Run a single test that needs a captured value
+tat run tests.json --suite "Workspace flow" --test "Create project" --variables workspaceId=ws-123
 
 # Output JSON report
 tat run tests.json --output json
