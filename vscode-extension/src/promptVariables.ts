@@ -140,7 +140,6 @@ export async function findPromptVariables(
 
       if (!testSkipped && test.capture) {
         for (const key of Object.keys(test.capture)) {
-          known.add(key);
           captureOrigins.set(key, test.name);
         }
       }
