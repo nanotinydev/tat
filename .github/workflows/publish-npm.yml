@@ -10,10 +10,25 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Require dispatch from main
+        if: github.ref_name != 'main'
+        run: |
+          echo "::error::This workflow must be run from main. Selected ref: ${GITHUB_REF_NAME}"
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Require release PR token
+        env:
+          RELEASE_PR_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_PR_TOKEN" ]; then
+            echo "::error::Missing RELEASE_PR_TOKEN secret. Configure a PAT or GitHub App token that can create pull requests and trigger CI."
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -21,11 +36,9 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
-      - name: Install dependencies for Linux runner
+      - name: Install dependencies
         working-directory: tat-cli
-        run: |
-          rm -f package-lock.json
-          npm install --no-package-lock
+        run: npm ci
 
       - name: Lint
         working-directory: tat-cli
@@ -52,10 +65,13 @@ jobs:
       - name: Create bump PR
         uses: peter-evans/create-pull-request@v7
         with:
+          token: ${{ secrets.RELEASE_PR_TOKEN }}
           commit-message: "chore: bump version after npm publish"
+          base: main
           branch: chore/npm-version-bump
           delete-branch: true
           title: "chore: bump version after npm publish"
           body: Automated patch bump after publishing the npm package.
           add-paths: |
             tat-cli/package.json
+            tat-cli/package-lock.json

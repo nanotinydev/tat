@@ -10,8 +10,25 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Require dispatch from main
+        if: github.ref_name != 'main'
+        run: |
+          echo "::error::This workflow must be run from main. Selected ref: ${GITHUB_REF_NAME}"
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require release PR token
+        env:
+          RELEASE_PR_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_PR_TOKEN" ]; then
+            echo "::error::Missing RELEASE_PR_TOKEN secret. Configure a PAT or GitHub App token that can create pull requests and trigger CI."
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -43,10 +60,13 @@ jobs:
       - name: Create bump PR
         uses: peter-evans/create-pull-request@v7
         with:
+          token: ${{ secrets.RELEASE_PR_TOKEN }}
           commit-message: "chore(vscode): bump version after marketplace publish"
+          base: main
           branch: chore/vscode-version-bump
           delete-branch: true
           title: "chore(vscode): bump version after marketplace publish"
           body: Automated patch bump after publishing to VS Code Marketplace.
           add-paths: |
             vscode-extension/package.json
+            vscode-extension/package-lock.json
