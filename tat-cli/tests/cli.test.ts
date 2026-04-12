@@ -8,6 +8,7 @@ vi.mock('../src/runner.js', () => ({
   run: vi.fn(),
   warnUndefinedVars: vi.fn().mockReturnValue([]),
   NoTestsMatchedError: class extends Error { readonly code = 'NO_TESTS_MATCHED'; },
+  MissingVariablesError: class extends Error { readonly code = 'MISSING_VARIABLES'; },
 }));
 
 vi.mock('../src/reporter.js', () => ({
@@ -164,6 +165,62 @@ describe('runCommand', () => {
     );
   });
 
+  it('parses repeated --variables values and passes them to run', async () => {
+    await runCommand('test.json', {
+      output: 'console',
+      variables: ['workspaceId=ws-123', 'projectId=prj-456'],
+    });
+
+    expect(runner.run).toHaveBeenCalledWith(
+      mockSuites,
+      expect.any(Object),
+      expect.objectContaining({
+        variables: {
+          workspaceId: 'ws-123',
+          projectId: 'prj-456',
+        },
+      }),
+    );
+  });
+
+  it('uses the last repeated --variables value for duplicate keys', async () => {
+    await runCommand('test.json', {
+      output: 'console',
+      variables: ['workspaceId=first', 'workspaceId=second'],
+    });
+
+    expect(runner.run).toHaveBeenCalledWith(
+      mockSuites,
+      expect.any(Object),
+      expect.objectContaining({
+        variables: {
+          workspaceId: 'second',
+        },
+      }),
+    );
+  });
+
+  it('stores manual variables in a null-prototype object', async () => {
+    await runCommand('test.json', {
+      output: 'console',
+      variables: ['__proto__=polluted', 'workspaceId=ws-123'],
+    });
+
+    const variables = vi.mocked(runner.run).mock.calls[0][2]?.variables as Record<string, string>;
+    expect(Object.getPrototypeOf(variables)).toBeNull();
+    expect(variables.workspaceId).toBe('ws-123');
+    expect(Object.prototype.hasOwnProperty.call(variables, '__proto__')).toBe(true);
+    expect(variables.__proto__).toBe('polluted');
+  });
+
+  it('exits with code 2 when a --variables entry is malformed', async () => {
+    await runCommand('test.json', { output: 'console', variables: ['workspaceId'] });
+
+    expect(console.error).toHaveBeenCalledWith('Invalid --variables entry "workspaceId". Expected key=value.');
+    expect(exitSpy).toHaveBeenCalledWith(2);
+    expect(runner.run).not.toHaveBeenCalled();
+  });
+
   it('warns about undefined variables before running', async () => {
     vi.mocked(runner.warnUndefinedVars).mockReturnValue(['  [warn] test "T": variable "{{token}}" is not defined']);
     await runCommand('test.json', { output: 'console' });
@@ -175,6 +232,19 @@ describe('runCommand', () => {
     vi.mocked(runner.run).mockRejectedValue(new Error('No tests matched the given filters.'));
     await runCommand('test.json', { output: 'console', suite: 'Suite', test: 'Missing' });
     expect(console.error).toHaveBeenCalledWith('No tests matched the given filters.');
+    expect(exitSpy).toHaveBeenCalledWith(2);
+  });
+
+  it('surfaces isolated-test missing-variable errors as configuration errors', async () => {
+    vi.mocked(runner.run).mockRejectedValue(new Error(
+      'Selected test "Create project" in suite "Suite" requires "{{workspaceId}}", which is normally captured by earlier test "Create workspace".',
+    ));
+
+    await runCommand('test.json', { output: 'console', suite: 'Suite', test: 'Create project' });
+
+    expect(console.error).toHaveBeenCalledWith(
+      'Selected test "Create project" in suite "Suite" requires "{{workspaceId}}", which is normally captured by earlier test "Create workspace".',
+    );
     expect(exitSpy).toHaveBeenCalledWith(2);
   });
 });

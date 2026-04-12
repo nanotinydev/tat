@@ -7,6 +7,7 @@ import { makeRequest, TatRequestError } from './http.js';
 import { buildContext, runAssertions } from './asserter.js';
 import { runCaptures } from './capturer.js';
 import { parseFileContent } from './fileFormat.js';
+import { extractVarRefs, findMissingVariablesForSelectedTests, formatMissingVariablesError, type MissingVariable } from './variables.js';
 import type { Suite, Test, TestResult, SuiteResult, RunResult } from './types.js';
 
 export class NoTestsMatchedError extends Error {
@@ -18,10 +19,22 @@ export class NoTestsMatchedError extends Error {
   }
 }
 
+export class MissingVariablesError extends Error {
+  readonly code = 'MISSING_VARIABLES';
+  readonly missing: MissingVariable[];
+
+  constructor(missing: MissingVariable[]) {
+    super(formatMissingVariablesError(missing));
+    this.name = 'MissingVariablesError';
+    this.missing = missing;
+  }
+}
+
 export interface RunOptions {
   tags?: string[];
   suiteName?: string;
   testName?: string;
+  variables?: Record<string, string>;
   bail?: boolean;
   timeout?: number;
   onSuiteStart?: (suiteName: string, tags: string[]) => void;
@@ -121,24 +134,6 @@ export function filterSuites(suites: Suite[], opts: RunOptions): Suite[] {
   return result;
 }
 
-// Extract all {{variable}} references from any value (strings, nested objects, arrays)
-function extractVarRefs(value: unknown): string[] {
-  const refs: string[] = [];
-  function scan(v: unknown): void {
-    if (typeof v === 'string') {
-      const p = /\{\{(\w+)\}\}/g;
-      let m: RegExpExecArray | null;
-      while ((m = p.exec(v)) !== null) refs.push(m[1]);
-    } else if (Array.isArray(v)) {
-      v.forEach(scan);
-    } else if (v !== null && typeof v === 'object') {
-      Object.values(v as Record<string, unknown>).forEach(scan);
-    }
-  }
-  scan(value);
-  return refs;
-}
-
 /**
  * Returns warning messages for any {{variable}} references that are not defined
  * in env or produced by a capture in a preceding test. Skipped tests are ignored.
@@ -236,6 +231,18 @@ export async function run(
   env: Record<string, string>,
   opts: RunOptions = {},
 ): Promise<RunResult> {
+  if (opts.testName) {
+    const missing = findMissingVariablesForSelectedTests(
+      suites,
+      env,
+      opts.testName,
+      opts.variables,
+    );
+    if (missing.length > 0) {
+      throw new MissingVariablesError(missing);
+    }
+  }
+
   const start = Date.now();
   const suiteResults: SuiteResult[] = [];
   let captures: Record<string, string> = {};
@@ -267,7 +274,7 @@ export async function run(
     for (const test of selectedTests) {
       if (bailed) break;
 
-      const vars = { ...env, ...captures };
+      const vars = { ...env, ...captures, ...opts.variables };
       const { result, captures: newCaptures } = await runTest(test, vars, opts.timeout);
       testResults.push(result);
       if (!result.skipped) {

@@ -3,7 +3,7 @@ import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomBytes } from 'crypto';
-import { filterSuites, run, loadAndValidate, resolveEnv, runSetup, warnUndefinedVars, NoTestsMatchedError } from '../src/runner.js';
+import { filterSuites, run, loadAndValidate, resolveEnv, runSetup, warnUndefinedVars, NoTestsMatchedError, MissingVariablesError } from '../src/runner.js';
 import type { Suite } from '../src/types.js';
 
 const suites: Suite[] = [
@@ -380,6 +380,81 @@ describe('run — test selection', () => {
     expect(result.total).toBe(1);
     expect(result.suites[0].tests).toHaveLength(1);
     expect(result.suites[0].tests[0].name).toBe('Second');
+  });
+
+  it('fails before any HTTP call when the selected test depends on an earlier capture', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const suites: Suite[] = [
+      {
+        name: 'Suite',
+        tests: [
+          { name: 'Create workspace', method: 'POST', url: 'https://example.com/workspaces', assert: [], capture: { workspaceId: 'id' } },
+          { name: 'Create project', method: 'POST', url: 'https://example.com/workspaces/{{workspaceId}}/projects', assert: [] },
+        ],
+      },
+    ];
+
+    await expect(run(suites, {}, { testName: 'Create project' })).rejects.toThrow(MissingVariablesError);
+    await expect(run(suites, {}, { testName: 'Create project' })).rejects.toThrow('{{workspaceId}}');
+    await expect(run(suites, {}, { testName: 'Create project' })).rejects.toThrow('Create workspace');
+    await expect(run(suites, {}, { testName: 'Create project' })).rejects.toThrow('suite "Suite"');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('allows manual variables to satisfy an isolated test dependency', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 201,
+      headers: { forEach: () => {} },
+      text: async () => '{}',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const suites: Suite[] = [
+      {
+        name: 'Suite',
+        tests: [
+          { name: 'Create workspace', method: 'POST', url: 'https://example.com/workspaces', assert: [], capture: { workspaceId: 'id' } },
+          { name: 'Create project', method: 'POST', url: 'https://example.com/workspaces/{{workspaceId}}/projects', assert: [] },
+        ],
+      },
+    ];
+
+    const result = await run(suites, {}, { testName: 'Create project', variables: { workspaceId: 'ws-123' } });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('https://example.com/workspaces/ws-123/projects');
+    expect(result.total).toBe(1);
+    expect(result.failed).toBe(0);
+  });
+
+  it('lets manual variables override captured values during interpolation', async () => {
+    let callCount = 0;
+    const fetchMock = vi.fn().mockImplementation(() => {
+      callCount++;
+      return Promise.resolve({
+        status: 200,
+        headers: { forEach: () => {} },
+        text: async () => callCount === 1 ? JSON.stringify({ userId: 'captured-id' }) : '{}',
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const suites: Suite[] = [
+      {
+        name: 'Suite',
+        tests: [
+          { name: 'Create', method: 'GET', url: 'https://example.com/create', assert: [], capture: { userId: 'userId' } },
+          { name: 'Use manual override', method: 'GET', url: 'https://example.com/users/{{userId}}', assert: [] },
+        ],
+      },
+    ];
+
+    await run(suites, {}, { variables: { userId: 'manual-id' } });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][0]).toBe('https://example.com/users/manual-id');
   });
 });
 

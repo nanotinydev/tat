@@ -10,6 +10,7 @@ Run and explore [`tat`](https://www.npmjs.com/package/@nanotiny/tiny-api-test) A
 - **YAML support** — Full support for `.tat.yml` and `.tat.yaml` test files with CodeLens and Test Explorer; use `tat: Validate File` to validate YAML files.
 - **Validate command** — `tat: Validate File` from the Command Palette checks JSON or YAML test files without running any HTTP requests.
 - **Output channel** — Full `tat` output appears in the *Tiny API Test* output channel.
+- **Single-test variable prompt** — When a `Run Test` action depends on a value normally captured by an earlier test, the extension prompts for that variable and forwards it to `tat` via `--variables` when the file does not rely on a `setup` command.
 
 ## Requirements
 
@@ -62,6 +63,8 @@ The extension discovers files matching `**/*.tat.{json,yml,yaml}`. Name your tes
 
 ## Notes
 
-- Running a single test from Test Explorer triggers its whole parent suite (the `tat` CLI filters by suite name, not individual test). All tests in the suite are updated.
+- Running a single test from Test Explorer now keeps the run isolated to that test. Earlier tests in the suite are not executed automatically.
+- If the selected test depends on a value normally captured by an earlier test, the extension prompts for it before launching `tat` and forwards it via `--variables` when the file does not use `setup`.
+- For files that use `setup`, the extension skips prompting to avoid running `setup` during variable collection. `setup` only covers runtime environment resolution; it does not recreate values captured by earlier tests. When an isolated test requires captured values, run the full suite or pass them manually with `--variables`.
 - The output channel shows the raw `--output json` payload from `tat`, useful for debugging.
 

@@ -11,9 +11,9 @@ function needsShell(bin: string): boolean {
   return process.platform === 'win32' && bin.endsWith('.cmd');
 }
 
-/** Wrap a string in double quotes if it contains spaces (for cmd.exe shell execution). */
+/** Quote and escape a string for cmd.exe shell execution. */
 function shellQuote(s: string): string {
-  return s.includes(' ') ? `"${s}"` : s;
+  return `"${s.replace(/"/g, '""').replace(/%/g, '%%')}"`;
 }
 
 /** Find `tat` on PATH using `where` (Windows) or `which` (Unix). Returns undefined if not found. */
@@ -35,6 +35,7 @@ function findTatOnPath(): string | undefined {
 export interface RunFileOptions {
   suiteName?: string;
   testName?: string;
+  variables?: Record<string, string>;
   timeout?: number;
   cliPath?: string;
   cwd?: string;
@@ -135,6 +136,7 @@ export function startRunFile(
     '--output', 'json',
     ...(opts.suiteName ? ['--suite', opts.suiteName] : []),
     ...(opts.testName ? ['--test', opts.testName] : []),
+    ...Object.entries(opts.variables ?? {}).flatMap(([key, value]) => ['--variables', `${key}=${value}`]),
   ];
   const shell = needsShell(bin);
   const execBin = shell ? shellQuote(bin) : bin;
