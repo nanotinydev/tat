@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,12 +49,13 @@ jobs:
         working-directory: tat-cli
         run: npm version patch --no-git-tag-version
 
-      - name: Commit next version
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tat-cli/package.json
-          git commit -m "chore: bump version after npm publish"
-
-      - name: Push next version
-        run: git push origin HEAD:${GITHUB_REF_NAME}
+      - name: Create bump PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: bump version after npm publish"
+          branch: chore/npm-version-bump
+          delete-branch: true
+          title: "chore: bump version after npm publish"
+          body: Automated patch bump after publishing the npm package.
+          add-paths: |
+            tat-cli/package.json
