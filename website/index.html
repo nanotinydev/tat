@@ -547,7 +547,7 @@
       <div class="feature-card">
         <div class="feature-icon">🔗</div>
         <h3>Capture &amp; Chain</h3>
-        <p>Extract values from responses and use them in subsequent requests. Build full API flows with ease.</p>
+        <p>Extract values from responses and use them in subsequent requests. For isolated test runs, pass missing values explicitly with <code>--variables</code>.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🏷️</div>
@@ -572,7 +572,7 @@
       <div class="feature-card">
         <div class="feature-icon">🧪</div>
         <h3>VS Code Test Runner</h3>
-        <p>Run <code>tat</code> suites from Test Explorer, use CodeLens in the editor, and keep API tests close to the files you are editing.</p>
+        <p>Run <code>tat</code> suites from Test Explorer, use CodeLens in the editor, and get prompted for capture-derived values when running a single test.</p>
       </div>
     </div>
   </div>
@@ -921,6 +921,10 @@ If authentication is required, create a setup hook and reuse the token in the te
 <span class="syn-key">env</span>: <span class="syn-str">./env.local.json</span></code></pre>
         </div>
       </div>
+
+      <h3>Single Test Runs</h3>
+      <p>When you run a single test with <code>--suite</code> and <code>--test</code>, <code>tat</code> keeps that run isolated. Earlier tests are not executed automatically, so capture-derived values must come from <code>env</code>, <code>setup</code>, <code>--env-cmd</code>, or manual <code>--variables</code> input.</p>
+      <pre><code><span class="prompt">$</span> tat run tests.tat.yml --suite "Workspace flow" --test "Create project" --variables workspaceId=ws-123</code></pre>
     </div>
 
     <!-- CLI Reference -->
@@ -936,6 +940,7 @@ If authentication is required, create a setup hook and reuse the token in the te
           <tr><td><code>--tag &lt;tags&gt;</code></td><td>Filter suites by tag (comma-separated, OR logic)</td></tr>
           <tr><td><code>--suite &lt;name&gt;</code></td><td>Run a single suite by name</td></tr>
           <tr><td><code>--test &lt;name&gt;</code></td><td>Run a single test by name (requires <code>--suite</code>)</td></tr>
+          <tr><td><code>--variables &lt;key=value&gt;</code></td><td>Supply a manual variable value for the run; repeat to pass more than one</td></tr>
           <tr><td><code>--output &lt;format&gt;</code></td><td><code>console</code> (default), <code>json</code>, or <code>junit</code></td></tr>
           <tr><td><code>--out &lt;file&gt;</code></td><td>Write output to a file</td></tr>
           <tr><td><code>--bail</code></td><td>Stop on first failure</td></tr>
@@ -1049,7 +1054,7 @@ console.log(JSON.stringify(<span class="syn-brace">{</span> <span class="syn-key
           <span class="syn-key">path</span>: results.xml</code></pre>
 
       <h3>VS Code Extension</h3>
-      <p>Get Test Explorer integration, CodeLens, and editor support:</p>
+      <p>Get Test Explorer integration, CodeLens, editor support, and prompts for missing capture-derived values during isolated single-test runs:</p>
       <pre><code><span class="prompt">$</span> code --install-extension nanotiny.tat-test-runner</code></pre>
 
       <h3>Agent Skill (tat-create)</h3>
