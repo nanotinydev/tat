@@ -501,6 +501,7 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <ul class="nav-links" id="navLinks">
+      <li><a href="#flow">Flows</a></li>
       <li><a href="#features">Features</a></li>
       <li><a href="#quick-start">Quick Start</a></li>
       <li><a href="#examples">Examples</a></li>
@@ -516,8 +517,8 @@
 <section class="hero">
   <div class="hero-badge">TINY API TEST</div>
   <img class="hero-logo" src="assets/tat-logo-wordmark.svg" alt="tat logo">
-   <h1>API testing in JSON/YAML.<br>Run in one command.</h1>
-  <p>Fast, file-based API tests for smoke checks, simple workflows, and CI. Write them in JSON or YAML and run them with one command.</p>
+   <h1>Test API flows,<br>not just endpoints.</h1>
+  <p>tat chains dependent HTTP requests — authenticate, capture values, reuse them in the next call — so you verify whole integration flows in JSON or YAML, from the CLI.</p>
   <div class="hero-actions">
     <a href="#quick-start" class="btn btn-primary">Get Started</a>
     <button class="btn btn-install" onclick="copyText('npm i -g @nanotiny/tiny-api-test@latest', this)">
@@ -574,6 +575,84 @@
         <h3>VS Code Test Runner</h3>
         <p>Run <code>tat</code> suites from Test Explorer, use CodeLens in the editor, and get prompted for capture-derived values when running a single test.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Flow-Based Testing ===== -->
+<style>
+  .flow-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .flow-copy p {
+    font-size: 0.975rem;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+  .flow-copy p.flow-closing {
+    color: var(--text-heading);
+    font-weight: 600;
+    margin-top: 20px;
+  }
+  .flow-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .flow-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 0.925rem;
+    color: var(--text);
+  }
+  .flow-list .step-number {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+    margin-bottom: 0;
+  }
+  .flow-list strong { color: var(--text-heading); font-weight: 700; }
+  .flow-list code {
+    background: #e0f2fe;
+    color: var(--primary);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+  }
+  @media (max-width: 768px) {
+    .flow-grid { grid-template-columns: 1fr; gap: 24px; }
+  }
+</style>
+<section class="section" id="flow">
+  <div class="container">
+    <div class="section-title">Flow-based API testing</div>
+    <div class="section-subtitle">In real integrations, nothing happens one endpoint at a time &mdash; everything is connected.</div>
+    <div class="flow-grid">
+      <div class="flow-copy">
+        <p>Most tools push you to test endpoints in isolation. But real integration work is a <strong>sequence of dependent steps</strong> &mdash; data from one response flows into the next request, and the whole chain represents one business scenario.</p>
+        <p>tat is designed around that shape. Define a flow as an ordered list of tests, capture values from each response, and feed them straight into the next call. One file, one command, the whole journey verified.</p>
+        <p class="flow-closing">Verify the flow first, then build with confidence.</p>
+      </div>
+      <ol class="flow-list" aria-label="Example flow">
+        <li><span class="step-number">1</span><span><strong>Authenticate</strong> &mdash; get an access token via <code>setup</code> or login request</span></li>
+        <li><span class="step-number">2</span><span><strong>Call API A</strong> &mdash; list workspaces the user can access</span></li>
+        <li><span class="step-number">3</span><span><strong>Capture</strong> &mdash; extract the workspace <code>id</code> from the response</span></li>
+        <li><span class="step-number">4</span><span><strong>Call API B</strong> &mdash; fetch related data using <code>{{workspaceId}}</code></span></li>
+        <li><span class="step-number">5</span><span><strong>Assert</strong> &mdash; validate status, fields, and the final result</span></li>
+      </ol>
     </div>
   </div>
 </section>
