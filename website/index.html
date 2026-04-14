@@ -170,6 +170,11 @@
       position: relative;
     }
     .btn-install:hover { background: #f1f5f9; }
+    .btn-try {
+      background: #1269d3;
+      color: #fff;
+    }
+    .btn-try:hover { background: #0f57b0; }
     .btn-install .copy-icon {
       width: 16px; height: 16px;
       color: var(--text-muted);
@@ -521,6 +526,10 @@
   <p>tat chains dependent HTTP requests — authenticate, capture values, reuse them in the next call — so you verify whole integration flows in JSON or YAML, from the CLI.</p>
   <div class="hero-actions">
     <a href="#quick-start" class="btn btn-primary">Get Started</a>
+    <a href="https://stackblitz.com/github/nanotinydev/tat-sample-api?file=README.md" target="_blank" rel="noopener" class="btn btn-try">
+      <svg width="16" height="16" viewBox="0 0 28 28" fill="currentColor" aria-hidden="true"><path d="M8.13 16.892h5.25l-3.266 8.551 11.777-13.443h-5.25l3.266-8.551z"/></svg>
+      Try in StackBlitz
+    </a>
     <button class="btn btn-install" onclick="copyText('npm i -g @nanotiny/tiny-api-test@latest', this)">
       npm i -g @nanotiny/tiny-api-test@latest
       <svg class="copy-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
@@ -786,6 +795,52 @@ If authentication is required, create a setup hook and reuse the token in the te
         </div>
         <p style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);">That's it. Your agent writes the tests, you run them.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Try it in your browser ===== -->
+<style>
+  .try-card {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 14px;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .try-card-text { flex: 1 1 320px; }
+  .try-card h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    margin-bottom: 6px;
+  }
+  .try-card p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+  .try-card .btn-try {
+    flex: 0 0 auto;
+    padding: 12px 22px;
+    font-size: 0.95rem;
+  }
+</style>
+<section class="section" id="try">
+  <div class="container">
+    <div class="try-card">
+      <div class="try-card-text">
+        <h3>Try tat in your browser &mdash; no install</h3>
+        <p>Open the sample API project in StackBlitz, run <code>tat</code> against a live sample API, and see a real flow pass in seconds.</p>
+      </div>
+      <a href="https://stackblitz.com/github/nanotinydev/tat-sample-api?file=README.md" target="_blank" rel="noopener" class="btn btn-try">
+        <svg width="16" height="16" viewBox="0 0 28 28" fill="currentColor" aria-hidden="true"><path d="M8.13 16.892h5.25l-3.266 8.551 11.777-13.443h-5.25l3.266-8.551z"/></svg>
+        Open in StackBlitz
+      </a>
     </div>
   </div>
 </section>
