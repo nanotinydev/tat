@@ -14,6 +14,28 @@ npm --prefix tat-cli exec vitest run tests/asserter.test.ts  # run a single test
 
 `tat-cli/` is the package root for the CLI. Build output is ESM only (`tat-cli/dist/cli.js`) with a `#!/usr/bin/env node` shebang injected by tsup. Entry point is `tat-cli/src/cli.ts`.
 
+## Cross-Package Impact Rule
+
+Any change in `tat-cli/` must include an explicit check for VS Code extension impact before the work is considered complete.
+
+At minimum, inspect `vscode-extension/` when a CLI change touches:
+- public types in `tat-cli/src/types.ts`
+- test file validation in `tat-cli/src/schema.ts` or `tat-cli/schema.json`
+- `RunResult`, `SuiteResult`, `TestResult`, assertion, capture, response, or JSON output shape
+- CLI command names, flags, exit codes, stdout/stderr behavior, or binary resolution assumptions
+- `.tat.json`, `.tat.yml`, or `.tat.yaml` parsing behavior
+- user-facing output that the extension may mirror in Test Explorer or the output channel
+
+If the extension is affected, update its source, docs, and tests in the same change. Prefer running:
+
+```bash
+npm --prefix tat-cli exec vitest run vscode-extension/tests --config tat-cli/vitest.config.ts
+npm --prefix vscode-extension run lint
+npm --prefix vscode-extension run build
+```
+
+If the extension is not affected, mention that check in the PR summary or final handoff.
+
 ## Architecture
 
 The execution flow for `tat run <file>` is:

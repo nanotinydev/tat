@@ -9,7 +9,7 @@ Run and explore [`tat`](https://www.npmjs.com/package/@nanotiny/tiny-api-test) A
 - **JSON validation** — Schema-based IntelliSense and error highlighting in `.tat.json` files (powered by the published JSON Schema, no configuration needed).
 - **YAML support** — Full support for `.tat.yml` and `.tat.yaml` test files with CodeLens and Test Explorer; use `tat: Validate File` to validate YAML files.
 - **Validate command** — `tat: Validate File` from the Command Palette checks JSON or YAML test files without running any HTTP requests.
-- **Output channel** — Full `tat` output appears in the *Tiny API Test* output channel.
+- **Output channel** — Full `tat` output appears in the *Tiny API Test* output channel, and Test Results show failed assertion actuals plus opted-in response status, headers, and body.
 - **Single-test variable prompt** — When a `Run Test` action depends on a value normally captured by an earlier test, the extension prompts for that variable and forwards it to `tat` via `--variables` when the file does not rely on a `setup` command.
 
 ## Requirements
@@ -46,6 +46,20 @@ If the API needs login, add a setup hook for authentication and reuse the token 
 If the binary is not found automatically, set `tat.cliPath` in VS Code Settings to the full path.
 
 When working inside this monorepo, the extension also auto-detects the CLI from `tat-cli/`.
+
+If validation fails after using a newly added test-file field, make sure the extension is resolving a `tat` CLI version that supports that schema. Update the workspace/global `@nanotiny/tiny-api-test` package or set `tat.cliPath` to the intended CLI build. JSON editor validation for `.tat.json` files is powered by the published `@nanotiny/tiny-api-test` schema.
+
+Response status output is explicit:
+
+```yaml
+suites:
+  - name: Users
+    tests:
+      - name: Get user
+        url: https://api.example.com/users/1
+        response:
+          status: true
+```
 
 ## Test file naming
 
