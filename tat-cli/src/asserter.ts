@@ -62,5 +62,11 @@ function addOperand(operands: Set<string>, operand: string): void {
 function isLiteralOperand(operand: string): boolean {
   if (/^(['"`]).*\1$/.test(operand)) return true;
   if (!Number.isNaN(Number(operand)) && operand.trim() !== '') return true;
-  return operand.toLowerCase() === 'true' || operand.toLowerCase() === 'false';
+  const normalized = operand.toLowerCase();
+  return (
+    normalized === 'true' ||
+    normalized === 'false' ||
+    normalized === 'null' ||
+    normalized === 'undefined'
+  );
 }

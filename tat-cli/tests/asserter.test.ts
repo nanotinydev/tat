@@ -97,6 +97,20 @@ describe('runAssertions', () => {
     });
   });
 
+  it('does not include null or undefined literals as actual operands', () => {
+    const nullResult = runAssertions(ctx, ['name == null']);
+    const undefinedResult = runAssertions(ctx, ['name == undefined']);
+
+    expect(nullResult[0]).toMatchObject({
+      passed: false,
+      actual: [{ operand: 'name', value: 'Alice' }],
+    });
+    expect(undefinedResult[0]).toMatchObject({
+      passed: false,
+      actual: [{ operand: 'name', value: 'Alice' }],
+    });
+  });
+
   it('runs multiple assertions independently', () => {
     const results = runAssertions(ctx, ['name == "Alice"', 'name == "Bob"']);
     expect(results[0].passed).toBe(true);
