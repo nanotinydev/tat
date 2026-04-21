@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { RunResult, TestResult, MultiRunResult } from './types.js';
+import type { AssertionResult, RunResult, TestResult, MultiRunResult } from './types.js';
 
 export type OutputFormat = 'console' | 'json' | 'junit';
 
@@ -13,6 +13,25 @@ function summaryLine(result: RunResult): string {
   if (result.skipped > 0) parts.push(`${result.skipped} skipped`);
   const str = `Results: ${parts.join(', ')}`;
   return result.failed === 0 ? chalk.green(str) : chalk.red(str);
+}
+
+function formatActualValue(value: unknown): string {
+  if (value === undefined) return 'undefined';
+  const json = JSON.stringify(value);
+  return json === undefined ? String(value) : json;
+}
+
+function formatActuals(assertion: AssertionResult): string {
+  if (!assertion.actual || assertion.actual.length === 0) return '';
+  const details = assertion.actual
+    .map(({ operand, value }) => `${operand}=${formatActualValue(value)}`)
+    .join(', ');
+  return ` (actual: ${details})`;
+}
+
+function formatAssertionFailure(assertion: AssertionResult): string {
+  const errDetail = assertion.error ? `: ${assertion.error}` : '';
+  return `${assertion.expr}${formatActuals(assertion)}${errDetail}`;
 }
 
 function consoleReport(result: RunResult): string {
@@ -36,8 +55,7 @@ function consoleReport(result: RunResult): string {
         lines.push(`  ${chalk.red('✘')} ${test.name} ${duration}`);
         for (const a of test.assertions) {
           if (!a.passed) {
-            const errDetail = a.error ? `: ${a.error}` : '';
-            lines.push(`    ${chalk.red('✘')} ${chalk.dim(a.expr)}${errDetail}`);
+            lines.push(`    ${chalk.red('✘')} ${chalk.dim(formatAssertionFailure(a))}`);
           }
         }
       }
@@ -95,14 +113,14 @@ function junitReport(result: RunResult): string {
             ? escapeXml(test.error)
             : test.assertions
                 .filter(a => !a.passed)
-                .map(a => escapeXml(a.expr))
+                .map(a => escapeXml(formatAssertionFailure(a)))
                 .join(', ');
 
           const failureBody = test.error
             ? escapeXml(test.error)
             : test.assertions
                 .filter(a => !a.passed)
-                .map(a => `${escapeXml(a.expr)}${a.error ? ': ' + escapeXml(a.error) : ''}`)
+                .map(a => escapeXml(formatAssertionFailure(a)))
                 .join('\n');
 
           return `    <testcase name="${name}" time="${tTime}">\n      <failure message="${failureMsg}">${failureBody}</failure>\n    </testcase>`;
@@ -131,6 +149,9 @@ function appendCaptureLines(test: TestResult, lines: string[]): void {
 }
 
 function appendResponseLines(test: TestResult, lines: string[]): void {
+  if (test.responseStatus !== undefined) {
+    lines.push(`    ${chalk.cyan('Response status:')} ${test.responseStatus}`);
+  }
   if (test.responseHeaders !== undefined) {
     lines.push(`    ${chalk.cyan('Response headers:')}`);
     for (const [k, v] of Object.entries(test.responseHeaders)) {
@@ -162,8 +183,7 @@ export function liveTestResult(test: TestResult): string {
     lines.push(`  ${chalk.red('✘')} ${test.name} ${duration}`);
     for (const a of test.assertions) {
       if (!a.passed) {
-        const errDetail = a.error ? `: ${a.error}` : '';
-        lines.push(`    ${chalk.red('✘')} ${chalk.dim(a.expr)}${errDetail}`);
+        lines.push(`    ${chalk.red('✘')} ${chalk.dim(formatAssertionFailure(a))}`);
       }
     }
   }
@@ -225,8 +245,7 @@ function multiConsoleReport(result: MultiRunResult): string {
           lines.push(`  ${chalk.red('✘')} ${test.name} ${duration}`);
           for (const a of test.assertions) {
             if (!a.passed) {
-              const errDetail = a.error ? `: ${a.error}` : '';
-              lines.push(`    ${chalk.red('✘')} ${chalk.dim(a.expr)}${errDetail}`);
+              lines.push(`    ${chalk.red('✘')} ${chalk.dim(formatAssertionFailure(a))}`);
             }
           }
         }
@@ -279,14 +298,14 @@ function multiJunitReport(result: MultiRunResult): string {
               ? escapeXml(test.error)
               : test.assertions
                   .filter(a => !a.passed)
-                  .map(a => escapeXml(a.expr))
+                  .map(a => escapeXml(formatAssertionFailure(a)))
                   .join(', ');
 
             const failureBody = test.error
               ? escapeXml(test.error)
               : test.assertions
                   .filter(a => !a.passed)
-                  .map(a => `${escapeXml(a.expr)}${a.error ? ': ' + escapeXml(a.error) : ''}`)
+                  .map(a => escapeXml(formatAssertionFailure(a)))
                   .join('\n');
 
             return `    <testcase name="${name}" time="${tTime}">\n      <failure message="${failureMsg}">${failureBody}</failure>\n    </testcase>`;

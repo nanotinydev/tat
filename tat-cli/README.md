@@ -256,7 +256,7 @@ suites:
 | `capture` | `object` | No | Extract values from the response to use in later tests (see [Capture & Chain](#capture--chain)) |
 | `skip` | `boolean` | No | Skip this test without failing the run |
 | `timeout` | `number` | No | Request timeout in milliseconds for this test. Overrides the file-level `timeout` and `--timeout` flag. |
-| `response` | `true` or `object` | No | Include response body and/or response headers in the test output. |
+| `response` | `true` or `object` | No | Include response status, body, and/or headers in the test output. |
 
 ---
 
@@ -774,9 +774,10 @@ assert:
 
 ## Response Output
 
-Use the `response` field on a test to include the response body and/or headers in the test output. This is useful for debugging or inspecting API responses without adding assertions.
+Use the `response` field on a test to include the response status, body, and/or headers in the test output. This is useful for debugging or inspecting API responses without adding assertions.
 
 - `response: true` — include both body and headers
+- `response: { status: true }` — include only the response status code
 - `response: { body: true }` — include only the response body
 - `response: { header: true }` — include only the response headers
 
@@ -788,6 +789,16 @@ Use the `response` field on a test to include the response body and/or headers i
   "method": "GET",
   "url": "{{baseUrl}}/users/1",
   "response": true,
+  "assert": ["$status == 200"]
+}
+```
+
+```json
+{
+  "name": "Inspect status only",
+  "method": "GET",
+  "url": "{{baseUrl}}/users/1",
+  "response": { "status": true },
   "assert": ["$status == 200"]
 }
 ```
@@ -809,6 +820,16 @@ Use the `response` field on a test to include the response body and/or headers i
   method: GET
   url: "{{baseUrl}}/users/1"
   response: true
+  assert:
+    - "$status == 200"
+```
+
+```yaml
+- name: Inspect status only
+  method: GET
+  url: "{{baseUrl}}/users/1"
+  response:
+    status: true
   assert:
     - "$status == 200"
 ```

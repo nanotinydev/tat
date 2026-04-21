@@ -70,6 +70,47 @@ describe('runAssertions', () => {
     expect(results[0].passed).toBe(false);
   });
 
+  it('includes the actual status value for a failed status assertion', () => {
+    const results = runAssertions({ ...ctx, $status: 500 }, ['$status == 200']);
+    expect(results[0]).toMatchObject({
+      passed: false,
+      actual: [{ operand: '$status', value: 500 }],
+    });
+  });
+
+  it('includes the actual body field value for a failed body assertion', () => {
+    const results = runAssertions(ctx, ['name == "Bob"']);
+    expect(results[0]).toMatchObject({
+      passed: false,
+      actual: [{ operand: 'name', value: 'Alice' }],
+    });
+  });
+
+  it('includes all referenced operand values for a failed composite assertion', () => {
+    const results = runAssertions(ctx, ['name == "Bob" && $status == 201']);
+    expect(results[0]).toMatchObject({
+      passed: false,
+      actual: [
+        { operand: 'name', value: 'Alice' },
+        { operand: '$status', value: 200 },
+      ],
+    });
+  });
+
+  it('does not include null or undefined literals as actual operands', () => {
+    const nullResult = runAssertions(ctx, ['name == null']);
+    const undefinedResult = runAssertions(ctx, ['name == undefined']);
+
+    expect(nullResult[0]).toMatchObject({
+      passed: false,
+      actual: [{ operand: 'name', value: 'Alice' }],
+    });
+    expect(undefinedResult[0]).toMatchObject({
+      passed: false,
+      actual: [{ operand: 'name', value: 'Alice' }],
+    });
+  });
+
   it('runs multiple assertions independently', () => {
     const results = runAssertions(ctx, ['name == "Alice"', 'name == "Bob"']);
     expect(results[0].passed).toBe(true);

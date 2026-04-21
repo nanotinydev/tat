@@ -16,6 +16,7 @@ export interface Test {
   assert: string[];
   capture?: Record<string, string>;
   response?: true | {
+    status?: true;
     body?: true;
     header?: true;
   };
@@ -27,6 +28,7 @@ export interface AssertionResult {
   expr: string;
   passed: boolean;
   error?: string;
+  actual?: Array<{ operand: string; value: unknown }>;
 }
 
 export interface TestResult {
@@ -37,6 +39,7 @@ export interface TestResult {
   durationMs: number;
   error?: string;
   captures?: Record<string, string>;
+  responseStatus?: number;
   responseBody?: unknown;
   responseHeaders?: Record<string, string>;
 }

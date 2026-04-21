@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { report, multiReport, liveFileHeader } from '../src/reporter.js';
+import { report, multiReport, liveFileHeader, liveTestResult } from '../src/reporter.js';
 import type { RunResult, MultiRunResult } from '../src/types.js';
 
 const passResult: RunResult = {
@@ -35,7 +35,7 @@ const failResult: RunResult = {
           passed: false,
           assertions: [
             { expr: '$status == 200', passed: true },
-            { expr: 'name == "Bob"', passed: false },
+            { expr: 'name == "Bob"', passed: false, actual: [{ operand: 'name', value: 'Alice' }] },
           ],
           durationMs: 30,
         },
@@ -69,6 +69,40 @@ describe('report - console', () => {
     const output = report(failResult, 'console');
     expect(output).toContain('name == "Bob"');
   });
+
+  it('shows actual values on failed assertion lines', () => {
+    const output = report(failResult, 'console');
+    expect(output).toContain('actual: name="Alice"');
+  });
+
+  it('shows response status when present', () => {
+    const result: RunResult = {
+      suites: [
+        {
+          name: 'User API',
+          tags: [],
+          tests: [
+            {
+              name: 'Create user',
+              passed: true,
+              assertions: [],
+              durationMs: 12,
+              responseStatus: 201,
+            },
+          ],
+        },
+      ],
+      total: 1,
+      passed: 1,
+      failed: 0,
+      skipped: 0,
+      durationMs: 12,
+    };
+
+    const output = report(result, 'console');
+    expect(output).toContain('Response status:');
+    expect(output).toContain('201');
+  });
 });
 
 describe('report - json', () => {
@@ -101,6 +135,7 @@ describe('report - junit', () => {
     const output = report(failResult, 'junit');
     expect(output).toContain('<failure');
     expect(output).toContain('name == &quot;Bob&quot;');
+    expect(output).toContain('actual: name=&quot;Alice&quot;');
   });
 
   it('escapes XML special characters', () => {
@@ -192,7 +227,7 @@ const multiResult: MultiRunResult = {
             tags: ['users'],
             tests: [
               { name: 'Create user', passed: true, assertions: [], durationMs: 200 },
-              { name: 'Delete user', passed: false, assertions: [{ expr: '$status == 204', passed: false }], durationMs: 150 },
+              { name: 'Delete user', passed: false, assertions: [{ expr: '$status == 204', passed: false, actual: [{ operand: '$status', value: 500 }] }], durationMs: 150 },
             ],
           },
         ],
@@ -226,6 +261,11 @@ describe('multiReport — console', () => {
   it('shows failed assertion expression', () => {
     const output = multiReport(multiResult, 'console');
     expect(output).toContain('$status == 204');
+  });
+
+  it('shows actual values on failed assertion lines', () => {
+    const output = multiReport(multiResult, 'console');
+    expect(output).toContain('actual: $status=500');
   });
 });
 
@@ -268,5 +308,23 @@ describe('liveFileHeader', () => {
   it('includes file name', () => {
     const output = liveFileHeader('auth.tat.json');
     expect(output).toContain('auth.tat.json');
+  });
+});
+
+describe('liveTestResult', () => {
+  it('shows actual values and response status', () => {
+    const output = liveTestResult({
+      name: 'Get user',
+      passed: false,
+      assertions: [
+        { expr: '$status == 200', passed: false, actual: [{ operand: '$status', value: 500 }] },
+      ],
+      durationMs: 25,
+      responseStatus: 500,
+    });
+
+    expect(output).toContain('actual: $status=500');
+    expect(output).toContain('Response status:');
+    expect(output).toContain('500');
   });
 });

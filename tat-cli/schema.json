@@ -113,9 +113,14 @@
             },
             {
               "type": "object",
-              "description": "Selectively include response body and/or headers",
+              "description": "Selectively include response status, body, and/or headers",
               "additionalProperties": false,
               "properties": {
+                "status": {
+                  "type": "boolean",
+                  "enum": [true],
+                  "description": "Include response status code in output"
+                },
                 "body": {
                   "type": "boolean",
                   "enum": [true],
