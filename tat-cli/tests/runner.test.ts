@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { writeFile, unlink } from 'fs/promises';
+import { readFile, writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomBytes } from 'crypto';
@@ -85,6 +85,77 @@ describe('run', () => {
     expect(result.suites[0].tests[0].responseHeaders).toEqual({
       'content-type': 'application/json',
     });
+    expect(result.suites[0].tests[0].responseStatus).toBeUndefined();
+  });
+
+  it('includes response status when explicitly requested by the test definition', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 201,
+      headers: {
+        forEach(cb: (value: string, key: string) => void) {
+          cb('application/json', 'content-type');
+        },
+      },
+      text: async () => JSON.stringify({ ok: true }),
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const suites: Suite[] = [
+      {
+        name: 'Response output',
+        tests: [
+          {
+            name: 'shows response status',
+            method: 'GET',
+            url: 'https://example.com/health',
+            assert: ['$status == 201'],
+            response: { status: true },
+          },
+        ],
+      },
+    ];
+
+    const result = await run(suites, {});
+    expect(result.suites[0].tests[0].responseStatus).toBe(201);
+    expect(result.suites[0].tests[0].responseBody).toBeUndefined();
+    expect(result.suites[0].tests[0].responseHeaders).toBeUndefined();
+  });
+
+  it('can include response status with body and headers', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 202,
+      headers: {
+        forEach(cb: (value: string, key: string) => void) {
+          cb('application/json', 'content-type');
+        },
+      },
+      text: async () => JSON.stringify({ accepted: true }),
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const suites: Suite[] = [
+      {
+        name: 'Response output',
+        tests: [
+          {
+            name: 'shows all response details',
+            method: 'GET',
+            url: 'https://example.com/health',
+            assert: ['$status == 202'],
+            response: { status: true, body: true, header: true },
+          },
+        ],
+      },
+    ];
+
+    const result = await run(suites, {});
+    expect(result.suites[0].tests[0].responseStatus).toBe(202);
+    expect(result.suites[0].tests[0].responseBody).toEqual({ accepted: true });
+    expect(result.suites[0].tests[0].responseHeaders).toEqual({
+      'content-type': 'application/json',
+    });
   });
 });
 
@@ -149,6 +220,105 @@ describe('loadAndValidate', () => {
       const { tatFile } = await loadAndValidate(path);
       expect(tatFile.suites[0].name).toBe('YAML Suite');
     }, '.tat.yaml');
+  });
+
+  it('accepts response status output in a test definition', async () => {
+    const content = JSON.stringify({
+      suites: [{
+        name: 'S',
+        tests: [{
+          name: 'T',
+          method: 'GET',
+          url: 'https://x.com',
+          response: { status: true },
+        }],
+      }],
+    });
+
+    await withTempFile(content, async (path) => {
+      const { tatFile } = await loadAndValidate(path);
+      expect(tatFile.suites[0].tests[0].response).toEqual({ status: true });
+    });
+  });
+
+  it('rejects false response status output in a test definition', async () => {
+    const content = JSON.stringify({
+      suites: [{
+        name: 'S',
+        tests: [{
+          name: 'T',
+          method: 'GET',
+          url: 'https://x.com',
+          response: { status: false },
+        }],
+      }],
+    });
+
+    await withTempFile(content, async (path) => {
+      await expect(loadAndValidate(path)).rejects.toThrow('Schema validation failed');
+    });
+  });
+
+  it('accepts response status with body and header output in a test definition', async () => {
+    const content = JSON.stringify({
+      suites: [{
+        name: 'S',
+        tests: [{
+          name: 'T',
+          method: 'GET',
+          url: 'https://x.com',
+          response: { status: true, body: true, header: true },
+        }],
+      }],
+    });
+
+    await withTempFile(content, async (path) => {
+      const { tatFile } = await loadAndValidate(path);
+      expect(tatFile.suites[0].tests[0].response).toEqual({ status: true, body: true, header: true });
+    });
+  });
+
+  it('rejects unknown response output keys in a test definition', async () => {
+    const content = JSON.stringify({
+      suites: [{
+        name: 'S',
+        tests: [{
+          name: 'T',
+          method: 'GET',
+          url: 'https://x.com',
+          response: { statusCode: true },
+        }],
+      }],
+    });
+
+    await withTempFile(content, async (path) => {
+      await expect(loadAndValidate(path)).rejects.toThrow('Schema validation failed');
+    });
+  });
+
+  it('documents response status in the package JSON schema', async () => {
+    const raw = await readFile(new URL('../schema.json', import.meta.url), 'utf-8');
+    const schema = JSON.parse(raw) as {
+      $defs: {
+        Test: {
+          properties: {
+            response: {
+              oneOf: Array<{
+                properties?: Record<string, unknown>;
+                additionalProperties?: boolean;
+              }>;
+            };
+          };
+        };
+      };
+    };
+    const responseObjectSchema = schema.$defs.Test.properties.response.oneOf[1];
+    expect(responseObjectSchema.additionalProperties).toBe(false);
+    expect(responseObjectSchema.properties?.status).toEqual({
+      type: 'boolean',
+      enum: [true],
+      description: 'Include response status code in output',
+    });
   });
 
   it('throws on invalid YAML', async () => {

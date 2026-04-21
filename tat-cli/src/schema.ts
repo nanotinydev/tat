@@ -11,9 +11,10 @@ const TestSchema = z.object({
   response: z.union([
     z.literal(true),
     z.object({
+      status: z.literal(true).optional(),
       body: z.literal(true).optional(),
       header: z.literal(true).optional(),
-    }),
+    }).strict(),
   ]).optional(),
   skip: z.boolean().optional(),
   timeout: z.number().int().positive().optional(),

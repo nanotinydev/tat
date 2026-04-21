@@ -199,6 +199,7 @@ async function runTest(
 
     const showBody = test.response === true || (typeof test.response === 'object' && test.response.body === true);
     const showHeader = test.response === true || (typeof test.response === 'object' && test.response.header === true);
+    const showStatus = typeof test.response === 'object' && test.response.status === true;
 
     result = {
       name: test.name,
@@ -206,6 +207,7 @@ async function runTest(
       assertions,
       durationMs,
       ...(Object.keys(captures).length > 0 ? { captures } : {}),
+      ...(showStatus ? { responseStatus: response.status } : {}),
       ...(showBody ? { responseBody: response.body } : {}),
       ...(showHeader ? { responseHeaders: response.headers } : {}),
     };
