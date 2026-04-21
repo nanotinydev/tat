@@ -62,7 +62,7 @@ test-level:  test::<fileUri>::<suiteName>::<testName>
 
 ### TEST RESULTS panel
 
-The left pane ("output") is populated with `run.appendOutput()` in `handleRunRequest`. It shows a per-test summary with pass/fail icons, duration, failed assertion details, and optionally `responseHeaders` / `responseBody` when the test's `response` property is enabled.
+The left pane ("output") is populated with `run.appendOutput()` in `handleRunRequest`. It shows a per-test summary with pass/fail icons, duration, failed assertion details including actual operand values when provided by the CLI, and optional `responseStatus` / `responseHeaders` / `responseBody` when the test's `response` property enables them.
 
 ### Key Windows gotchas
 

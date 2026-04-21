@@ -5,6 +5,7 @@ import { startRunFile, validateFile, TatNotFoundError, TatRunCancelledError } fr
 import { collectRunTargets, type RunTreeNode, type RunTargetSelection } from './runTargets';
 import type { RunResult, TestResult } from './types';
 import { findPromptVariables } from './promptVariables';
+import { formatFailedAssertion, formatTestResultResponseLines } from './resultFormatting';
 
 interface RunTarget {
   fileUri: vscode.Uri;
@@ -174,26 +175,12 @@ export class TatTestController {
               }
               for (const assertion of testResult.assertions) {
                 if (!assertion.passed) {
-                  run.appendOutput(
-                    `        ✗ ${assertion.expr}${assertion.error ? ': ' + assertion.error : ''}\r\n`,
-                  );
+                  run.appendOutput(`        ✗ ${formatFailedAssertion(assertion)}\r\n`);
                 }
               }
             }
-            if (testResult.responseHeaders) {
-              run.appendOutput('        Response Headers:\r\n');
-              for (const [header, value] of Object.entries(testResult.responseHeaders)) {
-                run.appendOutput(`          ${header}: ${value}\r\n`);
-              }
-            }
-            if (testResult.responseBody !== undefined) {
-              const bodyText = typeof testResult.responseBody === 'string'
-                ? testResult.responseBody
-                : JSON.stringify(testResult.responseBody, null, 2);
-              run.appendOutput('        Response Body:\r\n');
-              for (const line of bodyText.split('\n')) {
-                run.appendOutput(`          ${line}\r\n`);
-              }
+            for (const line of formatTestResultResponseLines(testResult)) {
+              run.appendOutput(`${line}\r\n`);
             }
           }
         }
@@ -341,9 +328,7 @@ export class TatTestController {
     } else {
       for (const assertion of testResult.assertions) {
         if (!assertion.passed) {
-          const text = assertion.error
-            ? `Assertion failed: ${assertion.expr}\n${assertion.error}`
-            : `Assertion failed: ${assertion.expr}`;
+          const text = `Assertion failed: ${formatFailedAssertion(assertion)}`;
           const message = new vscode.TestMessage(text);
           if (item.uri && item.range) {
             message.location = new vscode.Location(item.uri, item.range);
