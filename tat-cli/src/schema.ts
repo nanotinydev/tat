@@ -13,6 +13,7 @@ const TestSchema = z.object({
     z.object({
       status: z.literal(true).optional(),
       body: z.literal(true).optional(),
+      headers: z.literal(true).optional(),
       header: z.literal(true).optional(),
     }).strict(),
   ]).optional(),

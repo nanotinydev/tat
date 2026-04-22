@@ -198,7 +198,9 @@ async function runTest(
     captures = test.capture ? runCaptures(context, test.capture) : {};
 
     const showBody = test.response === true || (typeof test.response === 'object' && test.response.body === true);
-    const showHeader = test.response === true || (typeof test.response === 'object' && test.response.header === true);
+    const showHeader = test.response === true || (
+      typeof test.response === 'object' && (test.response.headers === true || test.response.header === true)
+    );
     const showStatus = typeof test.response === 'object' && test.response.status === true;
 
     result = {

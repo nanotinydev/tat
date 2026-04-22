@@ -779,7 +779,9 @@ Use the `response` field on a test to include the response status, body, and/or 
 - `response: true` — include both body and headers
 - `response: { status: true }` — include only the response status code
 - `response: { body: true }` — include only the response body
-- `response: { header: true }` — include only the response headers
+- `response: { headers: true }` — include only the response headers
+
+`response: { header: true }` is also accepted as a backwards-compatible alias.
 
 **JSON:**
 
@@ -813,6 +815,16 @@ Use the `response` field on a test to include the response status, body, and/or 
 }
 ```
 
+```json
+{
+  "name": "Inspect headers only",
+  "method": "GET",
+  "url": "{{baseUrl}}/users/1",
+  "response": { "headers": true },
+  "assert": ["$status == 200"]
+}
+```
+
 **YAML:**
 
 ```yaml
@@ -840,6 +852,16 @@ Use the `response` field on a test to include the response status, body, and/or 
   url: "{{baseUrl}}/users/1"
   response:
     body: true
+  assert:
+    - "$status == 200"
+```
+
+```yaml
+- name: Inspect headers only
+  method: GET
+  url: "{{baseUrl}}/users/1"
+  response:
+    headers: true
   assert:
     - "$status == 200"
 ```
