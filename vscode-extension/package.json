@@ -90,6 +90,11 @@
           "type": "number",
           "default": 30000,
           "description": "Timeout in milliseconds for tat CLI invocations from the extension."
+        },
+        "tat.insecureTls": {
+          "type": "boolean",
+          "default": false,
+          "description": "Pass --insecure to tat run. This disables TLS certificate verification for HTTPS requests and should only be used against trusted development endpoints."
         }
       }
     }

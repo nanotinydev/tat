@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { makeRequest, TatRequestError } from '../src/http.js';
+import { closeInsecureTlsDispatcher, makeRequest, TatRequestError } from '../src/http.js';
 
 function makeFetchMock(status: number, body: string, headers: Record<string, string> = {}) {
   return vi.fn().mockResolvedValue({
@@ -14,7 +14,10 @@ function makeFetchMock(status: number, body: string, headers: Record<string, str
 }
 
 describe('makeRequest', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(async () => {
+    vi.unstubAllGlobals();
+    await closeInsecureTlsDispatcher();
+  });
 
   it('returns status, headers, and parsed JSON body', async () => {
     vi.stubGlobal('fetch', makeFetchMock(200, '{"id":1}', { 'content-type': 'application/json' }));
@@ -90,5 +93,62 @@ describe('makeRequest', () => {
     await makeRequest('GET', 'https://example.com', { Authorization: 'Bearer token123' });
     const callHeaders = fetchMock.mock.calls[0][1].headers as Record<string, string>;
     expect(callHeaders['Authorization']).toBe('Bearer token123');
+  });
+
+  it('passes an explicit dispatcher when insecure TLS is enabled for HTTPS', async () => {
+    const fetchMock = makeFetchMock(200, '{}');
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeRequest('GET', 'https://example.com', {}, undefined, undefined, { insecureTls: true });
+
+    expect(fetchMock.mock.calls[0][1].dispatcher).toBeDefined();
+  });
+
+  it('does not pass a dispatcher for insecure TLS on plain HTTP', async () => {
+    const fetchMock = makeFetchMock(200, '{}');
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeRequest('GET', 'http://example.com', {}, undefined, undefined, { insecureTls: true });
+
+    expect(fetchMock.mock.calls[0][1].dispatcher).toBeUndefined();
+  });
+
+  it('passes an explicit dispatcher for HTTPS localhost without insecure TLS option', async () => {
+    const fetchMock = makeFetchMock(200, '{}');
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeRequest('GET', 'https://localhost:5001/api');
+
+    expect(fetchMock.mock.calls[0][1].dispatcher).toBeDefined();
+  });
+
+  it('passes an explicit dispatcher for HTTPS loopback IP addresses without insecure TLS option', async () => {
+    const fetchMock = makeFetchMock(200, '{}');
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeRequest('GET', 'https://127.0.0.1:5001/api');
+    await makeRequest('GET', 'https://[::1]:5001/api');
+
+    expect(fetchMock.mock.calls[0][1].dispatcher).toBeDefined();
+    expect(fetchMock.mock.calls[1][1].dispatcher).toBeDefined();
+  });
+
+  it('does not pass a dispatcher for non-local HTTPS without insecure TLS option', async () => {
+    const fetchMock = makeFetchMock(200, '{}');
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeRequest('GET', 'https://example.com/api');
+
+    expect(fetchMock.mock.calls[0][1].dispatcher).toBeUndefined();
+  });
+
+  it('reuses the insecure TLS dispatcher across requests', async () => {
+    const fetchMock = makeFetchMock(200, '{}');
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeRequest('GET', 'https://localhost:5001/one');
+    await makeRequest('GET', 'https://localhost:5001/two');
+
+    expect(fetchMock.mock.calls[0][1].dispatcher).toBe(fetchMock.mock.calls[1][1].dispatcher);
   });
 });

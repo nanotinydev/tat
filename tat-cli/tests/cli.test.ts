@@ -165,6 +165,28 @@ describe('runCommand', () => {
     );
   });
 
+  it('sets NODE_TLS_REJECT_UNAUTHORIZED only while --insecure run executes', async () => {
+    const originalTls = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+    delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+
+    try {
+      vi.mocked(runner.run).mockImplementation(async () => {
+        expect(process.env.NODE_TLS_REJECT_UNAUTHORIZED).toBe('0');
+        return passResult;
+      });
+
+      await runCommand('test.json', { output: 'console', insecure: true });
+
+      expect(process.env.NODE_TLS_REJECT_UNAUTHORIZED).toBeUndefined();
+    } finally {
+      if (originalTls === undefined) {
+        delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+      } else {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = originalTls;
+      }
+    }
+  });
+
   it('parses repeated --variables values and passes them to run', async () => {
     await runCommand('test.json', {
       output: 'console',

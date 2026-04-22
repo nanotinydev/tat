@@ -77,3 +77,4 @@ The left pane ("output") is populated with `run.appendOutput()` in `handleRunReq
 | `tat.testFilePattern` | `**/*.tat.{json,yml,yaml}` | Glob for test file discovery |
 | `tat.cliPath` | `""` | Override path to tat binary |
 | `tat.timeout` | `30000` | CLI invocation timeout (ms) |
+| `tat.insecureTls` | `false` | Pass `--insecure` to `tat run` for trusted non-local development endpoints with self-signed certificates. Localhost HTTPS is handled automatically by the CLI. |

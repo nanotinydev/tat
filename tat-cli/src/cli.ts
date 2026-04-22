@@ -26,6 +26,7 @@ export interface RunCommandOptions {
   bail?: boolean;
   envCmd?: string;
   timeout?: number;
+  insecure?: boolean;
 }
 
 /**
@@ -71,6 +72,22 @@ function parseManualVariables(entries: string[] | undefined): Record<string, str
   return variables;
 }
 
+async function withTlsVerificationSetting<T>(insecure: boolean | undefined, fn: () => Promise<T>): Promise<T> {
+  if (!insecure) return fn();
+
+  const previous = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  try {
+    return await fn();
+  } finally {
+    if (previous === undefined) {
+      delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+    } else {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = previous;
+    }
+  }
+}
+
 export async function runSingleFile(
   file: string,
   opts: RunCommandOptions,
@@ -79,52 +96,55 @@ export async function runSingleFile(
     onTestResult?: (suite: string, result: import('./types.js').TestResult) => void;
   },
 ): Promise<RunResult | null> {
-  const { tatFile, absPath } = await loadAndValidate(file);
-  const cwd = dirname(absPath);
-  const manualVariables = parseManualVariables(opts.variables);
+  return withTlsVerificationSetting(opts.insecure, async () => {
+    const { tatFile, absPath } = await loadAndValidate(file);
+    const cwd = dirname(absPath);
+    const manualVariables = parseManualVariables(opts.variables);
 
-  // 1. Resolve static env
-  let env = await resolveEnv(tatFile.env, absPath);
+    // 1. Resolve static env
+    let env = await resolveEnv(tatFile.env, absPath);
 
-  // 2. Run setup command from JSON file
-  if (tatFile.setup) {
-    console.error(`Running setup: ${tatFile.setup}`);
-    const setupEnv = await runSetup(tatFile.setup, cwd);
-    env = { ...env, ...setupEnv };
-  }
+    // 2. Run setup command from JSON file
+    if (tatFile.setup) {
+      console.error(`Running setup: ${tatFile.setup}`);
+      const setupEnv = await runSetup(tatFile.setup, cwd);
+      env = { ...env, ...setupEnv };
+    }
 
-  // 3. Run --env-cmd flag
-  if (opts.envCmd) {
-    console.error(`Running env-cmd: ${opts.envCmd}`);
-    const cmdEnv = await runSetup(opts.envCmd, cwd);
-    env = { ...env, ...cmdEnv };
-  }
+    // 3. Run --env-cmd flag
+    if (opts.envCmd) {
+      console.error(`Running env-cmd: ${opts.envCmd}`);
+      const cmdEnv = await runSetup(opts.envCmd, cwd);
+      env = { ...env, ...cmdEnv };
+    }
 
-  const tags = opts.tag ? opts.tag.split(',').map(t => t.trim()) : undefined;
-  const suites = filterSuites(tatFile.suites, { tags, suiteName: opts.suite });
+    const tags = opts.tag ? opts.tag.split(',').map(t => t.trim()) : undefined;
+    const suites = filterSuites(tatFile.suites, { tags, suiteName: opts.suite });
 
-  // Return null if no suites match (caller decides if this is an error)
-  if (suites.length === 0) return null;
+    // Return null if no suites match (caller decides if this is an error)
+    if (suites.length === 0) return null;
 
-  // 4. Warn about undefined variables
-  const warnings = warnUndefinedVars(suites, { ...env, ...manualVariables });
-  for (const w of warnings) console.warn(w);
+    // 4. Warn about undefined variables
+    const warnings = warnUndefinedVars(suites, { ...env, ...manualVariables });
+    for (const w of warnings) console.warn(w);
 
-  // 5. Resolve effective global timeout
-  const globalTimeout = opts.timeout ?? tatFile.timeout;
+    // 5. Resolve effective global timeout
+    const globalTimeout = opts.timeout ?? tatFile.timeout;
 
-  const result = await run(suites, env, {
-    tags,
-    suiteName: opts.suite,
-    testName: opts.test,
-    variables: manualVariables,
-    bail: opts.bail,
-    timeout: globalTimeout,
-    onSuiteStart: callbacks?.onSuiteStart,
-    onTestResult: callbacks?.onTestResult,
+    const result = await run(suites, env, {
+      tags,
+      suiteName: opts.suite,
+      testName: opts.test,
+      variables: manualVariables,
+      bail: opts.bail,
+      timeout: globalTimeout,
+      insecureTls: opts.insecure,
+      onSuiteStart: callbacks?.onSuiteStart,
+      onTestResult: callbacks?.onTestResult,
+    });
+
+    return result;
   });
-
-  return result;
 }
 
 async function runDirectory(dirPath: string, opts: RunCommandOptions): Promise<void> {
@@ -339,6 +359,7 @@ program
   .option('--bail', 'stop on first test failure')
   .option('--env-cmd <command>', 'run a command before tests; its JSON stdout is merged into env')
   .option('--timeout <ms>', 'request timeout in milliseconds (overrides file-level timeout)', (v) => parseInt(v, 10))
+  .option('--insecure', 'disable TLS certificate verification for HTTPS requests')
   .option('--variables <key=value>', 'supply a manual variable value for the run; repeatable', (value, acc: string[] = []) => [...acc, value], [])
   .action(runCommand);
 
