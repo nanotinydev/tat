@@ -56,6 +56,6 @@
     "url": "https://github.com/nanotinydev/tat/issues"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18.17"
   }
 }
