@@ -127,6 +127,5 @@ function isLocalhost(hostname: string): boolean {
   return host === 'localhost'
     || host.endsWith('.localhost')
     || host === '127.0.0.1'
-    || host === '::1'
-    || host === '[::1]';
+    || host === '::1';
 }
