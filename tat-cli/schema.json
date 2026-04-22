@@ -126,10 +126,15 @@
                   "enum": [true],
                   "description": "Include response body in output"
                 },
-                "header": {
+                "headers": {
                   "type": "boolean",
                   "enum": [true],
                   "description": "Include response headers in output"
+                },
+                "header": {
+                  "type": "boolean",
+                  "enum": [true],
+                  "description": "Include response headers in output (alias for headers)"
                 }
               }
             }

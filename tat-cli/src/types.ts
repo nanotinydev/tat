@@ -18,6 +18,7 @@ export interface Test {
   response?: true | {
     status?: true;
     body?: true;
+    headers?: true;
     header?: true;
   };
   skip?: boolean;

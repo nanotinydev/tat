@@ -157,6 +157,41 @@ describe('run', () => {
       'content-type': 'application/json',
     });
   });
+
+  it('can include response headers with the plural response flag', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 200,
+      headers: {
+        forEach(cb: (value: string, key: string) => void) {
+          cb('application/json', 'content-type');
+        },
+      },
+      text: async () => JSON.stringify({ ok: true }),
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const suites: Suite[] = [
+      {
+        name: 'Response output',
+        tests: [
+          {
+            name: 'shows response headers',
+            method: 'GET',
+            url: 'https://example.com/health',
+            assert: ['$status == 200'],
+            response: { headers: true },
+          },
+        ],
+      },
+    ];
+
+    const result = await run(suites, {});
+    expect(result.suites[0].tests[0].responseHeaders).toEqual({
+      'content-type': 'application/json',
+    });
+    expect(result.suites[0].tests[0].responseBody).toBeUndefined();
+  });
 });
 
 // Helper to create a temp file and clean it up automatically
@@ -278,6 +313,43 @@ describe('loadAndValidate', () => {
     });
   });
 
+  it('accepts response status with body and plural headers output in a test definition', async () => {
+    const content = JSON.stringify({
+      suites: [{
+        name: 'S',
+        tests: [{
+          name: 'T',
+          method: 'GET',
+          url: 'https://x.com',
+          response: { status: true, body: true, headers: true },
+        }],
+      }],
+    });
+
+    await withTempFile(content, async (path) => {
+      const { tatFile } = await loadAndValidate(path);
+      expect(tatFile.suites[0].tests[0].response).toEqual({ status: true, body: true, headers: true });
+    });
+  });
+
+  it('rejects false plural response headers output in a test definition', async () => {
+    const content = JSON.stringify({
+      suites: [{
+        name: 'S',
+        tests: [{
+          name: 'T',
+          method: 'GET',
+          url: 'https://x.com',
+          response: { headers: false },
+        }],
+      }],
+    });
+
+    await withTempFile(content, async (path) => {
+      await expect(loadAndValidate(path)).rejects.toThrow('Schema validation failed');
+    });
+  });
+
   it('rejects unknown response output keys in a test definition', async () => {
     const content = JSON.stringify({
       suites: [{
@@ -318,6 +390,16 @@ describe('loadAndValidate', () => {
       type: 'boolean',
       enum: [true],
       description: 'Include response status code in output',
+    });
+    expect(responseObjectSchema.properties?.headers).toEqual({
+      type: 'boolean',
+      enum: [true],
+      description: 'Include response headers in output',
+    });
+    expect(responseObjectSchema.properties?.header).toEqual({
+      type: 'boolean',
+      enum: [true],
+      description: 'Include response headers in output (alias for headers)',
     });
   });
 
