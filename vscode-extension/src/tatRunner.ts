@@ -39,6 +39,7 @@ export interface RunFileOptions {
   timeout?: number;
   cliPath?: string;
   cwd?: string;
+  insecureTls?: boolean;
 }
 
 export interface RunFileResult {
@@ -134,6 +135,7 @@ export function startRunFile(
     'run',
     filePath,
     '--output', 'json',
+    ...(opts.insecureTls ? ['--insecure'] : []),
     ...(opts.suiteName ? ['--suite', opts.suiteName] : []),
     ...(opts.testName ? ['--test', opts.testName] : []),
     ...Object.entries(opts.variables ?? {}).flatMap(([key, value]) => ['--variables', `${key}=${value}`]),

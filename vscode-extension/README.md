@@ -74,6 +74,7 @@ The extension discovers files matching `**/*.tat.{json,yml,yaml}`. Name your tes
 | `tat.testFilePattern` | `**/*.tat.{json,yml,yaml}` | Glob pattern for discovering test files |
 | `tat.cliPath` | *(auto)* | Path to the `tat` binary. Leave empty to auto-detect from `node_modules/.bin/tat`, `tat-cli/`, or `npx tat` |
 | `tat.timeout` | `30000` | Timeout in ms for `tat` CLI invocations from the extension |
+| `tat.insecureTls` | `false` | Pass `--insecure` to `tat run` to disable TLS certificate verification for trusted non-local development endpoints. Localhost HTTPS is handled automatically by the CLI. |
 
 ## Notes
 

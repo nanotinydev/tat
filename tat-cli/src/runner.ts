@@ -37,6 +37,7 @@ export interface RunOptions {
   variables?: Record<string, string>;
   bail?: boolean;
   timeout?: number;
+  insecureTls?: boolean;
   onSuiteStart?: (suiteName: string, tags: string[]) => void;
   onTestResult?: (suiteName: string, result: TestResult) => void;
 }
@@ -171,6 +172,7 @@ async function runTest(
   test: Test,
   vars: Record<string, string>,
   globalTimeout?: number,
+  insecureTls?: boolean,
 ): Promise<{ result: TestResult; captures: Record<string, string> }> {
   if (test.skip) {
     return {
@@ -191,7 +193,7 @@ async function runTest(
   let captures: Record<string, string> = {};
 
   try {
-    const response = await makeRequest(test.method, url, headers, body, effectiveTimeout);
+    const response = await makeRequest(test.method, url, headers, body, effectiveTimeout, { insecureTls });
     const durationMs = Date.now() - start;
     const context = buildContext(response, durationMs);
     const assertions = runAssertions(context, test.assert);
@@ -277,7 +279,7 @@ export async function run(
       if (bailed) break;
 
       const vars = { ...env, ...captures, ...opts.variables };
-      const { result, captures: newCaptures } = await runTest(test, vars, opts.timeout);
+      const { result, captures: newCaptures } = await runTest(test, vars, opts.timeout, opts.insecureTls);
       testResults.push(result);
       if (!result.skipped) {
         captures = { ...captures, ...newCaptures };

@@ -122,6 +122,38 @@ describe('run', () => {
     expect(result.suites[0].tests[0].responseHeaders).toBeUndefined();
   });
 
+  it('passes insecure TLS request option to HTTPS fetches when enabled', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 200,
+      headers: {
+        forEach() {
+          // no response headers needed for this test
+        },
+      },
+      text: async () => JSON.stringify({ ok: true }),
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const suites: Suite[] = [
+      {
+        name: 'TLS',
+        tests: [
+          {
+            name: 'allows self-signed certs',
+            method: 'GET',
+            url: 'https://example.com/health',
+            assert: ['$status == 200'],
+          },
+        ],
+      },
+    ];
+
+    await run(suites, {}, { insecureTls: true });
+
+    expect(fetchMock.mock.calls[0][1].dispatcher).toBeDefined();
+  });
+
   it('can include response status with body and headers', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       status: 202,

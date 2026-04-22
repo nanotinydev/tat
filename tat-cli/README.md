@@ -869,6 +869,7 @@ tat run ./tests/          # runs all tat files in the directory
 | `--bail` | Stop on the first test failure. |
 | `--env-cmd <command>` | Run a shell command before tests; its JSON stdout is merged into env. Overrides `setup` on conflict. |
 | `--timeout <ms>` | Set a global request timeout in milliseconds. Overrides the file-level `timeout`. Per-test `timeout` still takes priority. |
+| `--insecure` | Disable TLS certificate verification for HTTPS requests. Intended only for trusted non-local development endpoints with self-signed certificates. |
 | `--test <name>` | Run a single test by name. Requires `--suite`. |
 | `--variables <key=value>` | Supply a manual variable value for the run. Repeat the flag to provide multiple values. Manual values override env, setup, env-cmd, and captured values. |
 
@@ -893,6 +894,9 @@ tat run tests.json --suite "User API" --test "Get user"
 # Run a single test that needs a captured value
 tat run tests.json --suite "Workspace flow" --test "Create project" --variables workspaceId=ws-123
 
+# Allow self-signed certificates for a trusted development endpoint
+tat run tests.tat.json --insecure
+
 # Output JSON report
 tat run tests.json --output json
 
@@ -902,6 +906,8 @@ tat run tests.json --output junit --out results.xml
 # Stop on first failure
 tat run tests.json --bail
 ```
+
+HTTPS requests to `localhost`, `*.localhost`, `127.0.0.1`, and `[::1]` automatically allow self-signed certificates. Use `--insecure` only for trusted non-local development hosts.
 
 ### Exit Codes
 

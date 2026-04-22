@@ -57,6 +57,24 @@ describe('startRunFile', () => {
     });
   });
 
+  it('passes --insecure to tat run when insecure TLS is enabled', async () => {
+    const child = new FakeChildProcess();
+    spawnMock.mockReturnValue(child);
+    execSyncMock.mockImplementation(() => {
+      throw new Error('tat not on PATH');
+    });
+
+    const { startRunFile } = await import('../src/tatRunner');
+    const handle = startRunFile('/workspace/sample.tat.json', [], { insecureTls: true });
+
+    const [, args] = spawnMock.mock.calls[0] as [string, string[], object];
+    expect(args.map((arg) => arg.replaceAll('"', ''))).toContain('--insecure');
+
+    child.stdout.emit('data', Buffer.from('{"passed":1,"failed":0,"skipped":0,"total":1,"durationMs":5,"suites":[]}'));
+    child.emit('close', 0);
+    await expect(handle.result).resolves.toBeDefined();
+  });
+
   it('rejects quickly on cancellation and attempts to kill the child process', async () => {
     const child = new FakeChildProcess();
     spawnMock.mockReturnValue(child);

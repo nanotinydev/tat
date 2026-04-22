@@ -126,6 +126,7 @@ export class TatTestController {
     const config = vscode.workspace.getConfiguration('tat');
     const cliPath = config.get<string>('cliPath', '');
     const timeout = config.get<number>('timeout', 30000);
+    const insecureTls = config.get<boolean>('insecureTls', false);
     const workspaceFolders = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
 
     for (const target of targets) {
@@ -152,6 +153,7 @@ export class TatTestController {
           variables: manualVariables,
           cliPath,
           timeout,
+          insecureTls,
         });
         cancelActiveRun = () => activeRun.cancel();
         const { result, rawOutput } = await activeRun.result;
