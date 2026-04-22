@@ -396,6 +396,11 @@ describe('loadAndValidate', () => {
       enum: [true],
       description: 'Include response headers in output',
     });
+    expect(responseObjectSchema.properties?.header).toEqual({
+      type: 'boolean',
+      enum: [true],
+      description: 'Include response headers in output (alias for headers)',
+    });
   });
 
   it('throws on invalid YAML', async () => {
