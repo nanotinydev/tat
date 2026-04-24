@@ -1,0 +1,18 @@
+{
+  "name": "tat-workspace",
+  "private": true,
+  "workspaces": [
+    "tat-cli",
+    "vscode-extension",
+    "packages/tat-shared"
+  ],
+  "scripts": {
+    "build": "npm --prefix tat-cli run build && npm --prefix vscode-extension run build",
+    "lint": "npm --prefix tat-cli run lint && npm --prefix vscode-extension run lint && npm run lint:shared",
+    "lint:shared": "npm exec --workspace tat-cli -- tsc -p ../packages/tat-shared/tsconfig.json --noEmit",
+    "test": "npm --prefix tat-cli test && npm --prefix tat-cli exec vitest run vscode-extension/tests packages/tat-shared/tests --config tat-cli/vitest.config.ts",
+    "test:contracts": "npm --prefix tat-cli exec vitest run tests/contracts --config tat-cli/vitest.config.ts",
+    "verify": "npm run lint && npm run test && npm run build && npm run test:contracts",
+    "smoke:packaged-cli": "node scripts/smoke-packaged-cli.mjs"
+  }
+}

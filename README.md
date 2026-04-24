@@ -80,6 +80,10 @@ code --install-extension nanotiny.tat-test-runner
 ## Common Commands
 
 ```bash
+npm install
+npm run verify
+npm run test:contracts
+
 npm --prefix tat-cli run build
 npm --prefix tat-cli run lint
 npm --prefix tat-cli test

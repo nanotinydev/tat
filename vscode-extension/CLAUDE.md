@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run build        # bundle src/ → dist/extension.js via esbuild (CJS)
 npm run build:watch  # same, with watch mode
 npm run lint         # type-check only (tsc --noEmit), no emit
+npm run test         # run the extension unit tests through Vitest
 npm run package      # produce tat-test-runner-x.x.x.vsix for distribution
 ```
 
@@ -15,7 +16,7 @@ Press **F5** in VS Code (with this folder open) to launch an Extension Developme
 
 ## Architecture
 
-This is a VS Code extension that integrates the `tat` CLI into the Test Explorer UI. It is a **separate CJS package** — it must not import from the parent `../src` ESM package at runtime.
+This is a VS Code extension that integrates the `tat` CLI into the Test Explorer UI. It is a **separate CJS package** and may only consume shared runtime contracts/helpers through the internal `@tat/shared` workspace package. It must not deep-import CLI source files.
 
 ### Build
 
@@ -29,9 +30,9 @@ esbuild bundles everything into a single `dist/extension.js`. Key constraints:
 | File | Responsibility |
 |------|----------------|
 | `src/extension.ts` | `activate()` / `deactivate()` — wires `TatTestController`, `TatCodeLensProvider`, and the 4 commands |
-| `src/types.ts` | Type-only re-exports of `RunResult`, `SuiteResult`, `TestResult`, `AssertionResult` from `../tat-cli/src/types.ts` — single source of truth, drift caught by `tsc --noEmit` |
-| `src/fileParser.ts` | `parseTestFile(text, fileName)` — `JSON.parse` or `yaml.parse` for structure (based on file extension) + sequential regex line scan for `vscode.Range` positions. Also exports `isTatFile()` for extension checking. Uses `yaml` package for YAML parsing. |
-| `src/tatRunner.ts` | Invokes the `tat` CLI as a child process via `execFileAsync`. Handles binary resolution, Windows `.cmd` wrapping, exit codes, and JSON parsing. |
+| `src/types.ts` | Type-only re-exports of `RunResult`, `SuiteResult`, `TestResult`, `AssertionResult` from `@tat/shared` |
+| `src/fileParser.ts` | Uses shared `parseTatFileContent()` / `isTatFile()` helpers from `@tat/shared` for structure, then adds VS Code-specific `Range` mapping |
+| `src/tatRunner.ts` | Invokes the `tat` CLI as a child process. Handles binary resolution, Windows `.cmd` wrapping, exit codes, and validates JSON output with `RunResultSchema` from `@tat/shared` |
 | `src/testController.ts` | VS Code Testing API — discovers `*.tat.{json,yml,yaml}` files, builds the TestItem tree (file → suite → test), runs tests, maps results back to TestItems, populates the TEST RESULTS panel via `run.appendOutput()`. |
 | `src/codeLens.ts` | `TatCodeLensProvider` — "Run Suite ▶" / "Run Test ▶" CodeLens buttons above each suite and test in `.tat.json`, `.tat.yml`, and `.tat.yaml` files. |
 
@@ -51,6 +52,11 @@ On Windows, `.cmd` files cannot be spawned directly by `execFile` — `resolveEx
 - Exit 0 → all tests passed; stdout is valid `RunResult` JSON.
 - Exit 1 → test failures; stdout **still contains valid `RunResult` JSON** — do not throw.
 - Exit 2 → config/validation error; stderr has the message.
+
+The extension must keep these assumptions aligned with:
+- `packages/tat-shared/src/contracts.ts`
+- `tests/contracts/`
+- `Rules/project-tat-cli-exit-codes.md`
 
 ### TestItem ID scheme
 

@@ -1,0 +1,15 @@
+{
+  "suites": [
+    {
+      "name": "Broken",
+      "tests": [
+        {
+          "name": "Missing method and url",
+          "assert": [
+            "$status == 200"
+          ]
+        }
+      ]
+    }
+  ]
+}

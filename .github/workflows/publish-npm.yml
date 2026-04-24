@@ -36,21 +36,14 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
-      - name: Install dependencies
-        working-directory: tat-cli
+      - name: Install workspace dependencies
         run: npm ci
 
-      - name: Lint
-        working-directory: tat-cli
-        run: npm run lint
+      - name: Verify workspace
+        run: npm run verify
 
-      - name: Test
-        working-directory: tat-cli
-        run: npm test
-
-      - name: Build
-        working-directory: tat-cli
-        run: npm run build
+      - name: Smoke packaged CLI
+        run: npm run smoke:packaged-cli
 
       - name: Publish to npm
         working-directory: tat-cli
@@ -73,5 +66,5 @@ jobs:
           title: "chore: bump version after npm publish"
           body: Automated patch bump after publishing the npm package.
           add-paths: |
+            package-lock.json
             tat-cli/package.json
-            tat-cli/package-lock.json

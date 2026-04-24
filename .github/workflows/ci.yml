@@ -7,8 +7,12 @@ on:
     branches: [main]
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -16,22 +20,12 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install CLI deps
-        working-directory: tat-cli
+      - name: Install workspace dependencies
         run: npm ci
 
-      - name: Install extension deps
-        working-directory: vscode-extension
-        run: npm install
+      - name: Verify workspace
+        run: npm run verify
 
-      - name: Lint CLI
-        working-directory: tat-cli
-        run: npm run lint
-
-      - name: Test CLI
-        working-directory: tat-cli
-        run: npm test
-
-      - name: Lint extension (catches type drift)
-        working-directory: vscode-extension
-        run: npm run lint
+      - name: Smoke packaged CLI
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run smoke:packaged-cli

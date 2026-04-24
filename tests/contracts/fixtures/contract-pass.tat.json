@@ -1,0 +1,27 @@
+{
+  "suites": [
+    {
+      "name": "Users",
+      "tags": ["smoke"],
+      "tests": [
+        {
+          "name": "Get user",
+          "method": "GET",
+          "url": "{{baseUrl}}/users/1",
+          "assert": [
+            "$status == 200",
+            "id == 1"
+          ],
+          "capture": {
+            "userId": "id"
+          },
+          "response": {
+            "status": true,
+            "body": true,
+            "headers": true
+          }
+        }
+      ]
+    }
+  ]
+}

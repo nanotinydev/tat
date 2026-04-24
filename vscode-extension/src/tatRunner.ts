@@ -2,6 +2,7 @@ import { execFile, execSync, spawn } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
+import { RunResultSchema } from '@tat/shared';
 import type { RunResult } from './types';
 
 const execFileAsync = promisify(execFile);
@@ -50,6 +51,18 @@ export interface RunFileResult {
 export interface ActiveRunFileHandle {
   result: Promise<RunFileResult>;
   cancel(): void;
+}
+
+export function parseRunOutput(stdout: string, command: string): RunResult {
+  try {
+    return RunResultSchema.parse(JSON.parse(stdout.trim()));
+  } catch {
+    throw new Error(
+      `tat output was not valid JSON.\n` +
+      `Command: ${command}\n` +
+      `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
+    );
+  }
 }
 
 export class TatNotFoundError extends Error {
@@ -202,7 +215,7 @@ export function startRunFile(
       if (code === 0 || (code === 1 && stdout)) {
         try {
           resolveOnce({
-            result: JSON.parse(stdout.trim()) as RunResult,
+            result: parseRunOutput(stdout, `${bin} ${args.join(' ')}`),
             rawOutput: stdout,
           });
         } catch {
