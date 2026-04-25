@@ -76,12 +76,14 @@ export function parseRunOutput(stdout: string, command: string): RunResult {
       );
     }
 
+    if (error instanceof Error) {
+      throw error;
+    }
+
     throw new Error(
-      error instanceof Error
-        ? error.message
-        : `tat output could not be parsed.\n` +
-          `Command: ${command}\n` +
-          `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
+      `tat output could not be parsed.\n` +
+      `Command: ${command}\n` +
+      `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
     );
   }
 }
