@@ -15,7 +15,8 @@ export function parseTatFileContent(filePath: string, raw: string): unknown {
     try {
       return JSON.parse(raw);
     } catch (error) {
-      throw new Error(`Invalid JSON in ${filePath}: ${(error as Error).message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invalid JSON in ${filePath}: ${message}`);
     }
   }
 
@@ -23,7 +24,8 @@ export function parseTatFileContent(filePath: string, raw: string): unknown {
     try {
       return parseYaml(raw);
     } catch (error) {
-      throw new Error(`Invalid YAML in ${filePath}: ${(error as Error).message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invalid YAML in ${filePath}: ${message}`);
     }
   }
 

@@ -106,9 +106,6 @@
     "test": "vitest run tests --config ../tat-cli/vitest.config.ts",
     "package": "vsce package --no-dependencies"
   },
-  "dependencies": {
-    "yaml": "^2.7.0"
-  },
   "devDependencies": {
     "@tat/shared": "file:../packages/tat-shared",
     "@types/node": "^20.0.0",

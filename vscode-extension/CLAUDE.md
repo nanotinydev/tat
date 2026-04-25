@@ -23,7 +23,7 @@ This is a VS Code extension that integrates the `tat` CLI into the Test Explorer
 esbuild bundles everything into a single `dist/extension.js`. Key constraints:
 - `format: 'cjs'` — VS Code extension host uses `require()`, not ESM.
 - `external: ['vscode']` — `vscode` is provided by the host; never bundle it.
-- All other deps (currently `yaml` at runtime) are bundled in.
+- All other non-`vscode` deps are bundled in, including the shared parser/runtime helpers pulled in through `@tat/shared`.
 
 ### Source files
 
