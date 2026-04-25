@@ -8,6 +8,7 @@ export default defineConfig({
   format: ['esm'],
   clean: true,
   sourcemap: true,
+  noExternal: ['@tat/shared'],
   banner: {
     js: '#!/usr/bin/env node',
   },
