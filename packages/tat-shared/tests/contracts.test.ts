@@ -107,7 +107,7 @@ describe('tat shared file format helpers', () => {
       },
     }));
 
-    const { parseTatFileContent: parseTatFileContentWithMockedYaml } = await import('../src/fileFormat.ts');
+    const { parseTatFileContent: parseTatFileContentWithMockedYaml } = await import('../src/fileFormat.js');
 
     expect(() => parseTatFileContentWithMockedYaml('users.tat.yml', 'suites: [')).toThrow(
       'Invalid YAML in users.tat.yml: bad yaml payload',
