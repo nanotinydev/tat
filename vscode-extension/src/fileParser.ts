@@ -29,17 +29,12 @@ type TatFile = {
 
 /**
  * Parse a .tat.json / .tat.yml / .tat.yaml file and return suite/test names
- * with their line positions. Uses JSON.parse or YAML.parse for structure +
- * line scanning for positions. No external deps beyond the yaml package.
+ * with their line positions. Shared helpers from `@tat/shared` handle the
+ * JSON/YAML structure parsing while this module adds VS Code-specific range
+ * mapping for suites and tests.
  */
 export function parseTestFile(text: string, fileName = '.tat.json'): ParsedFile {
-  let data: TatFile;
-  try {
-    data = parseTatFileContent(fileName, text) as TatFile;
-  } catch {
-    const format = isYamlTatFile(fileName) ? 'YAML' : 'JSON';
-    throw new Error(`${format} parse error in test file`);
-  }
+  const data = parseTatFileContent(fileName, text) as TatFile;
 
   const lines = text.split('\n');
 
