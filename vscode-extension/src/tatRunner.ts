@@ -3,7 +3,6 @@ import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
 import { RunResultSchema } from '@tat/shared';
-import { ZodError } from 'zod';
 import type { RunResult } from './types';
 
 const execFileAsync = promisify(execFile);
@@ -57,7 +56,17 @@ export interface ActiveRunFileHandle {
 export function parseRunOutput(stdout: string, command: string): RunResult {
   try {
     const parsedJson = JSON.parse(stdout.trim());
-    return RunResultSchema.parse(parsedJson);
+    const result = RunResultSchema.safeParse(parsedJson);
+    if (result.success) {
+      return result.data;
+    }
+
+    throw new Error(
+      `tat output did not match the expected RunResult schema.\n` +
+      `Command: ${command}\n` +
+      `Schema issues:\n${result.error.issues.map((issue) => `- ${issue.path.join('.') || '<root>'}: ${issue.message}`).join('\n')}\n` +
+      `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
+    );
   } catch (error) {
     if (error instanceof SyntaxError) {
       throw new Error(
@@ -67,21 +76,37 @@ export function parseRunOutput(stdout: string, command: string): RunResult {
       );
     }
 
-    if (error instanceof ZodError) {
-      throw new Error(
-        `tat output did not match the expected RunResult schema.\n` +
-        `Command: ${command}\n` +
-        `Schema issues:\n${error.issues.map((issue) => `- ${issue.path.join('.') || '<root>'}: ${issue.message}`).join('\n')}\n` +
-        `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
-      );
-    }
-
     throw new Error(
-      `tat output could not be parsed.\n` +
-      `Command: ${command}\n` +
-      `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
+      error instanceof Error
+        ? error.message
+        : `tat output could not be parsed.\n` +
+          `Command: ${command}\n` +
+          `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
     );
   }
+}
+
+function formatDiagnosticCommand(bin: string, args: string[]): string {
+  const redactedArgs: string[] = [];
+
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (arg === '--variables') {
+      redactedArgs.push(arg);
+      const assignment = args[i + 1];
+      if (assignment) {
+        const eqIndex = assignment.indexOf('=');
+        const key = eqIndex >= 0 ? assignment.slice(0, eqIndex) : assignment;
+        redactedArgs.push(`${key}=***`);
+        i += 1;
+      }
+      continue;
+    }
+
+    redactedArgs.push(arg);
+  }
+
+  return `${bin} ${redactedArgs.join(' ')}`;
 }
 
 export class TatNotFoundError extends Error {
@@ -234,7 +259,7 @@ export function startRunFile(
       if (code === 0 || (code === 1 && stdout)) {
         try {
           resolveOnce({
-            result: parseRunOutput(stdout, `${bin} ${args.join(' ')}`),
+            result: parseRunOutput(stdout, formatDiagnosticCommand(bin, args)),
             rawOutput: stdout,
           });
         } catch (error) {
