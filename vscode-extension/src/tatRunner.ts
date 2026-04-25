@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
 import { RunResultSchema } from '@tat/shared';
+import { ZodError } from 'zod';
 import type { RunResult } from './types';
 
 const execFileAsync = promisify(execFile);
@@ -55,10 +56,28 @@ export interface ActiveRunFileHandle {
 
 export function parseRunOutput(stdout: string, command: string): RunResult {
   try {
-    return RunResultSchema.parse(JSON.parse(stdout.trim()));
-  } catch {
+    const parsedJson = JSON.parse(stdout.trim());
+    return RunResultSchema.parse(parsedJson);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(
+        `tat output was not valid JSON.\n` +
+        `Command: ${command}\n` +
+        `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
+      );
+    }
+
+    if (error instanceof ZodError) {
+      throw new Error(
+        `tat output did not match the expected RunResult schema.\n` +
+        `Command: ${command}\n` +
+        `Schema issues:\n${error.issues.map((issue) => `- ${issue.path.join('.') || '<root>'}: ${issue.message}`).join('\n')}\n` +
+        `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
+      );
+    }
+
     throw new Error(
-      `tat output was not valid JSON.\n` +
+      `tat output could not be parsed.\n` +
       `Command: ${command}\n` +
       `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
     );
@@ -218,12 +237,8 @@ export function startRunFile(
             result: parseRunOutput(stdout, `${bin} ${args.join(' ')}`),
             rawOutput: stdout,
           });
-        } catch {
-          rejectOnce(new Error(
-            `tat output was not valid JSON.\n` +
-            `Command: ${bin} ${args.join(' ')}\n` +
-            `Output (first 800 chars):\n${stdout.slice(0, 800)}`,
-          ));
+        } catch (error) {
+          rejectOnce(error instanceof Error ? error : new Error(String(error)));
         }
         return;
       }

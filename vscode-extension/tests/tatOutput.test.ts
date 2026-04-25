@@ -45,6 +45,12 @@ describe('parseRunOutput', () => {
 
   it('throws a helpful error for invalid CLI JSON output', () => {
     expect(() => parseRunOutput('{"failed":"nope"}', 'tat run broken.tat.json --output json')).toThrow(
+      'tat output did not match the expected RunResult schema.',
+    );
+  });
+
+  it('distinguishes malformed JSON from schema validation errors', () => {
+    expect(() => parseRunOutput('{not-json', 'tat run broken.tat.json --output json')).toThrow(
       'tat output was not valid JSON.',
     );
   });
