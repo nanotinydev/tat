@@ -64,3 +64,4 @@ jobs:
           add-paths: |
             package-lock.json
             vscode-extension/package.json
+            vscode-extension/package-lock.json

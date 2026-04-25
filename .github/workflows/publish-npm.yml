@@ -68,3 +68,4 @@ jobs:
           add-paths: |
             package-lock.json
             tat-cli/package.json
+            tat-cli/package-lock.json
