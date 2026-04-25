@@ -89,6 +89,29 @@ describe('startRunFile', () => {
     await expect(handle.result).rejects.toBeInstanceOf(TatRunCancelledError);
     expect(child.kill).toHaveBeenCalledTimes(1);
   });
+
+  it('redacts variable values from diagnostic command output', async () => {
+    const child = new FakeChildProcess();
+    spawnMock.mockReturnValue(child);
+    execSyncMock.mockImplementation(() => {
+      throw new Error('tat not on PATH');
+    });
+
+    const { startRunFile } = await import('../src/tatRunner');
+    const handle = startRunFile('/workspace/sample.tat.json', [], {
+      variables: {
+        apiKey: 'secret-token',
+        username: 'alice',
+      },
+    });
+
+    child.stdout.emit('data', Buffer.from('{"failed":"nope"}'));
+    child.emit('close', 1);
+
+    await expect(handle.result).rejects.toThrow(/--variables apiKey=\*\*\* --variables username=\*\*\*/);
+    await expect(handle.result).rejects.not.toThrow('secret-token');
+    await expect(handle.result).rejects.not.toThrow('alice');
+  });
 });
 
 describe('resolveTatBinary', () => {

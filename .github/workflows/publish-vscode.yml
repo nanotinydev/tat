@@ -35,17 +35,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
-        working-directory: vscode-extension
-        run: npm install
+      - name: Install workspace dependencies
+        run: npm ci
 
-      - name: Lint
-        working-directory: vscode-extension
-        run: npm run lint
-
-      - name: Build
-        working-directory: vscode-extension
-        run: npm run build
+      - name: Verify workspace
+        run: npm run verify
 
       - name: Publish to VS Code Marketplace
         working-directory: vscode-extension
@@ -68,5 +62,6 @@ jobs:
           title: "chore(vscode): bump version after marketplace publish"
           body: Automated patch bump after publishing to VS Code Marketplace.
           add-paths: |
+            package-lock.json
             vscode-extension/package.json
             vscode-extension/package-lock.json

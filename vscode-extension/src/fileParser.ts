@@ -1,16 +1,8 @@
 import * as vscode from 'vscode';
-import { parse as parseYaml } from 'yaml';
-
-const TAT_EXTENSIONS = ['.tat.json', '.tat.yml', '.tat.yaml'];
+import { isTatFile, isYamlTatFile, parseTatFileContent } from '@tat/shared';
 
 /** Check whether a file path ends with a recognised TAT extension. */
-export function isTatFile(fileName: string): boolean {
-  return TAT_EXTENSIONS.some(ext => fileName.endsWith(ext));
-}
-
-function isYamlFile(fileName: string): boolean {
-  return fileName.endsWith('.tat.yml') || fileName.endsWith('.tat.yaml');
-}
+export { isTatFile };
 
 export interface ParsedTest {
   name: string;
@@ -37,21 +29,12 @@ type TatFile = {
 
 /**
  * Parse a .tat.json / .tat.yml / .tat.yaml file and return suite/test names
- * with their line positions. Uses JSON.parse or YAML.parse for structure +
- * line scanning for positions. No external deps beyond the yaml package.
+ * with their line positions. Shared helpers from `@tat/shared` handle the
+ * JSON/YAML structure parsing while this module adds VS Code-specific range
+ * mapping for suites and tests.
  */
 export function parseTestFile(text: string, fileName = '.tat.json'): ParsedFile {
-  let data: TatFile;
-  try {
-    if (isYamlFile(fileName)) {
-      data = parseYaml(text) as TatFile;
-    } else {
-      data = JSON.parse(text) as TatFile;
-    }
-  } catch {
-    const format = isYamlFile(fileName) ? 'YAML' : 'JSON';
-    throw new Error(`${format} parse error in test file`);
-  }
+  const data = parseTatFileContent(fileName, text) as TatFile;
 
   const lines = text.split('\n');
 
@@ -61,7 +44,7 @@ export function parseTestFile(text: string, fileName = '.tat.json'): ParsedFile 
   const suitesKeyLine = lines.findIndex(l => /"suites"\s*:/.test(l) || /^\s*suites\s*:/.test(l));
   const fileRange = lineRange(lines, suitesKeyLine >= 0 ? suitesKeyLine : 0);
 
-  const yaml = isYamlFile(fileName);
+  const yaml = isYamlTatFile(fileName);
   const suites: ParsedSuite[] = [];
   let cursor = 0;
 

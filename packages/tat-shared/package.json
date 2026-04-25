@@ -1,0 +1,13 @@
+{
+  "name": "@tat/shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "yaml": "^2.7.0",
+    "zod": "^3.22.0"
+  }
+}

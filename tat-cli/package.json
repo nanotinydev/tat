@@ -28,6 +28,7 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@tat/shared": "file:../packages/tat-shared",
     "@types/node": "^24.5.2",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0",

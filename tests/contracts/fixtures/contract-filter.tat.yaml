@@ -1,0 +1,14 @@
+suites:
+  - name: Filters
+    tests:
+      - name: Skipped test
+        skip: true
+        method: GET
+        url: "{{baseUrl}}/users/1"
+        assert:
+          - "$status == 200"
+      - name: Selected test
+        method: GET
+        url: "{{baseUrl}}/users/1"
+        assert:
+          - "$status == 200"

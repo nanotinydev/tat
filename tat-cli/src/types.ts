@@ -1,4 +1,13 @@
+import type { RunResult } from '@tat/shared';
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD';
+
+export type {
+  AssertionResult,
+  TestResult,
+  SuiteResult,
+  RunResult,
+} from '@tat/shared';
 
 export interface Suite {
   name: string;
@@ -24,42 +33,6 @@ export interface Test {
   skip?: boolean;
   timeout?: number;
 }
-
-export interface AssertionResult {
-  expr: string;
-  passed: boolean;
-  error?: string;
-  actual?: Array<{ operand: string; value: unknown }>;
-}
-
-export interface TestResult {
-  name: string;
-  passed: boolean;
-  skipped?: boolean;
-  assertions: AssertionResult[];
-  durationMs: number;
-  error?: string;
-  captures?: Record<string, string>;
-  responseStatus?: number;
-  responseBody?: unknown;
-  responseHeaders?: Record<string, string>;
-}
-
-export interface SuiteResult {
-  name: string;
-  tags: string[];
-  tests: TestResult[];
-}
-
-export interface RunResult {
-  suites: SuiteResult[];
-  total: number;
-  passed: number;
-  failed: number;
-  skipped: number;
-  durationMs: number;
-}
-
 export interface FileRunResult {
   file: string;
   result: RunResult;

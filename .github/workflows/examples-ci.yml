@@ -17,8 +17,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install CLI deps
-        working-directory: tat-cli
+      - name: Install workspace dependencies
         run: npm ci
 
       - name: Build CLI

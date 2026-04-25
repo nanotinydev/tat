@@ -1,0 +1,11 @@
+suites:
+  - name: Failing users
+    tests:
+      - name: Fails with valid result json
+        method: GET
+        url: "{{baseUrl}}/fail"
+        assert:
+          - "$status == 200"
+        response:
+          status: true
+          body: true
