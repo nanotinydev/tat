@@ -1,3 +1,5 @@
+import type { RunResult } from '@tat/shared';
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD';
 
 export type {
@@ -31,9 +33,6 @@ export interface Test {
   skip?: boolean;
   timeout?: number;
 }
-
-import type { RunResult } from '@tat/shared';
-
 export interface FileRunResult {
   file: string;
   result: RunResult;

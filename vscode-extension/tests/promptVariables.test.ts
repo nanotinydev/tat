@@ -175,4 +175,13 @@ describe('findPromptVariables', () => {
       `Invalid test file ${filePath}: expected an object with a suites array.`,
     );
   });
+
+  it('preserves unsupported file format errors from the shared parser', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tat-prompt-vars-'));
+    const filePath = writeTextFile(tmpDir, 'sample.json', '{"suites":[]}');
+
+    await expect(findPromptVariables(filePath, 'Workspace flow', 'Create project')).rejects.toThrow(
+      `Unsupported file format: ${filePath}`,
+    );
+  });
 });

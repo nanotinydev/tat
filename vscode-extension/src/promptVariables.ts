@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
 import * as path from 'path';
-import { isYamlTatFile, parseTatFileContent } from '@tat/shared';
+import { parseTatFileContent } from '@tat/shared';
 
 interface PromptTest {
   name: string;
@@ -29,14 +29,7 @@ export interface PromptVariable {
 }
 
 function parseTatFile(text: string, filePath: string): PromptTatFile {
-  let parsed: unknown;
-  try {
-    parsed = parseTatFileContent(filePath, text);
-  } catch (error) {
-    const format = isYamlTatFile(filePath) ? 'YAML' : 'JSON';
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`${format} parse error in test file ${filePath}: ${message}`);
-  }
+  const parsed = parseTatFileContent(filePath, text);
 
   if (
     parsed === null ||
